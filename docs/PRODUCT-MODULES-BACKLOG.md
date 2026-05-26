@@ -2,10 +2,41 @@
 
 > Living backlog for product modules, expansion ideas, validation mechanisms, and profile types.
 > Capture ideas here before they become formal decisions in `docs/DECISIONS.md`.
+> This is the canonical module backlog. `docs/MODULES-BACKLOG.md` is retained only as an archived pointer.
 
-**Last updated:** 2026-05-16  
-**Status:** Working backlog  
+**Last updated:** 2026-05-27  
+**Status:** Canonical working backlog  
 **Collaborators:** Codex + Claude Code
+
+---
+
+## 0. Current Product Scope
+
+HireGEN must stay centered on one thesis:
+
+> Turn scattered candidate evidence into recruiter-trusted proof of capability.
+
+The product is not only for Tier-2/3 candidates. It is for all candidates and recruiters, with stronger upside for under-discovered talent whose proof is real but not visible through pedigree, referrals, or resume polish.
+
+### Phase Plan
+
+| Phase | Goal | Modules |
+|---|---|---|
+| Hackathon MVP | Prove the proof-profile flow | Profile baseline, target-role gap, Git/live project signals, recruiter proof view, 1-page brief |
+| Wave 1 | Build trusted supply | Career Guide, Git portfolio analyzer, proof badges, student/employee profile modes |
+| Wave 2 | Build recruiter value | Recruiter dashboard, job matching, accepted intro workflow, validation/lab proof |
+| Wave 3 | Build acquisition loops | AI Job Impact Explorer, public career audits, college/bootcamp validation programs |
+
+### Immediate Priorities
+
+| Priority | Item | Why |
+|---|---|---|
+| P1 | Recruiter dashboard polish | Recruiters are the paying side; their view must feel useful. |
+| P1 | Product brief polish | Day-3 MVP checkpoint artifact. |
+| P1 | Proof profile quality testing | Needs more resumes, GitHub links, project links, and JDs. |
+| P2 | Final logo + badge usage | Improves trust and brand recall. |
+| P2 | Public mirror sync | Keep public repo updated without leaking private context. |
+| P2 | Backlog hygiene | Avoid parallel Codex/Claude source-of-truth drift. |
 
 ---
 

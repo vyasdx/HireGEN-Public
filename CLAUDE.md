@@ -4,8 +4,12 @@ India-first, skill-validated hiring platform. Replaces resume noise with verifia
 
 - Default branch: **main**
 - Remote: https://github.com/vyasdx/HireGEN
+- Public mirror: https://github.com/vyasdx/HireGEN-Public
 - Single source of truth for project state: **`.voffice/`** in this repo
 - The V-Office dashboard reads `.voffice/` directly
+
+## Public Mirror Rule
+`HireGEN-Public` is a clean-history public mirror for hackathon visibility. It intentionally excludes `.voffice/`, `.claude/`, `.env*`, `.vercel/`, `node_modules/`, `.next/`, and local generated state. Do not push private V-Office context or secrets to the public mirror. Private-to-public sync is manual until an explicit sync workflow is added.
 
 ## V-Office Auto-Update Rules
 BEFORE EVERY GIT PUSH, you MUST:

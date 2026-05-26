@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandMark } from "@/components/brand-mark";
 
 export function Footer() {
   return (
@@ -6,14 +7,9 @@ export function Footer() {
       <div className="max-w-7xl mx-auto glass p-8 md:p-10">
         <div className="relative z-10 grid md:grid-cols-4 gap-8 text-sm">
           <div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 via-pink-500 to-accent-500 flex items-center justify-center text-white font-bold">
-                H
-              </div>
-              <span className="display text-lg">HireGEN</span>
-            </div>
+            <BrandMark />
             <p className="mt-3 text-ink-500 max-w-xs">
-              Proof-of-capability hiring for India. AI-parsed skill graphs that recruiters trust.
+              Proof-of-capability hiring for candidates and recruiters. AI-parsed skill graphs that hiring teams can trust.
             </p>
             <p className="mt-2 text-[10px] text-ink-500/70 italic">
               OpenAI × Outskill Hackathon · May 2026

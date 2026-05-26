@@ -1,14 +1,12 @@
 import Link from "next/link";
+import { BrandMark } from "@/components/brand-mark";
 
 export function Nav() {
   return (
     <header className="sticky top-3 z-40 px-3">
       <div className="max-w-7xl mx-auto glass !rounded-2xl h-14 px-4 flex items-center justify-between">
         <Link href="/" className="relative z-10 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 via-pink-500 to-accent-500 flex items-center justify-center text-white font-bold shadow-md">
-            H
-          </div>
-          <span className="display text-lg">HireGEN</span>
+          <BrandMark />
           <span className="chip !py-0.5 !px-2 !text-[10px] ml-1">India · Beta</span>
         </Link>
 
