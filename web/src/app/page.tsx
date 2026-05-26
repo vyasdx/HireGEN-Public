@@ -8,7 +8,7 @@ const productCards = [
   { title: "Git Verified", body: "Authorship, cadence, complexity — read straight from your repos.", href: "/profile/demo" },
   { title: "Lab Proof", body: "15-min adaptive challenges that recruiters trust.", href: "/profile/demo" },
   { title: "Career Guide", body: "Resume + target role → gap analysis + 3-month roadmap.", href: "/builder" },
-  { title: "Recruiter View", body: "Top candidates ranked by real signal, not pedigree.", href: "/recruiter" },
+  { title: "Recruiter View", body: "Shortlist candidates by direct match, transferability, and missing proof.", href: "/recruiter" },
 ];
 
 export default function Home() {
@@ -20,7 +20,7 @@ export default function Home() {
       <div className="px-3 mt-3">
         <div className="max-w-7xl mx-auto chip mx-auto text-center justify-center !text-xs">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
-          OpenAI × Outskill Hackathon build in progress · Day 1 of 5
+          OpenAI × Outskill Hackathon build in progress · Day 3 of 5
         </div>
       </div>
 
@@ -33,18 +33,19 @@ export default function Home() {
           </h1>
           <p className="mt-6 text-lg md:text-xl text-ink-700 max-w-2xl mx-auto">
             HireGEN turns resumes, GitHub portfolios, projects, and validation tasks into
-            structured skill graphs recruiters can trust. India-first. Proof-first.
+            structured skill graphs recruiters can trust. Candidate proof, recruiter signal,
+            fewer guesses.
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/builder" className="btn-primary">
-              Build proof profile
+              Candidate: build proof profile
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <path d="M5 12h14M13 5l7 7-7 7" />
               </svg>
             </Link>
-            <Link href="/profile/demo" className="btn-glass">
-              View sample profile →
+            <Link href="/recruiter" className="btn-glass">
+              Recruiter: view shortlist →
             </Link>
           </div>
           <p className="mt-5 text-xs text-ink-500">Free for candidates. Forever.</p>

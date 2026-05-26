@@ -36,8 +36,8 @@ export function Footer() {
           <div>
             <div className="text-xs font-semibold text-ink-900 uppercase tracking-wider">Legal</div>
             <ul className="mt-3 space-y-2 text-ink-500">
-              <li><Link href="/brief#privacy" className="hover:text-ink-900">Privacy (DPDP-aligned)</Link></li>
-              <li><Link href="/brief" className="hover:text-ink-900">Terms (beta)</Link></li>
+              <li><Link href="/privacy" className="hover:text-ink-900">Privacy</Link></li>
+              <li><Link href="/terms" className="hover:text-ink-900">Terms</Link></li>
             </ul>
           </div>
         </div>

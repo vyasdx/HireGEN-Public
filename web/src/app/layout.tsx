@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "HireGEN — Get hired on proof, not polish.",
   description:
-    "HireGEN is India's proof-of-capability hiring platform. AI turns resumes, GitHub portfolios, projects, and validation tasks into structured skill graphs recruiters can trust.",
+    "HireGEN is a proof-of-capability hiring platform. AI turns resumes, GitHub portfolios, projects, and validation tasks into structured skill graphs recruiters can trust.",
   keywords: [
     "hiring",
     "skill validation",
@@ -14,13 +14,13 @@ export const metadata: Metadata = {
     "GitHub portfolio",
     "recruiter dashboard",
     "AI hiring",
-    "Tier-2 Tier-3 talent",
+    "under-discovered talent",
   ],
   authors: [{ name: "Vedavyas Vayalpadu" }],
   openGraph: {
     title: "HireGEN — Get hired on proof, not polish.",
     description:
-      "Proof-of-capability hiring platform for India. Skill graphs > resumes.",
+      "Proof-of-capability hiring platform. Skill graphs > resumes.",
     type: "website",
     locale: "en_IN",
     siteName: "HireGEN",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "HireGEN — Get hired on proof, not polish.",
-    description: "Proof-of-capability hiring platform for India.",
+    description: "Proof-of-capability hiring platform for candidates and recruiters.",
   },
 };
 
