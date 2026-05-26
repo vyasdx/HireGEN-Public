@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 160" width="100%" height="100%" role="img" aria-labelledby="title desc">
+  <title id="title">HireGEN logo concept 02 - Skill Graph</title>
+  <desc id="desc">HireGEN wordmark with connected skill graph nodes inside an angular rounded mark.</desc>
+  <defs>
+    <linearGradient id="hg02Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EC4899"/>
+      <stop offset="46%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+    <linearGradient id="hg02Text" x1="286" y1="28" x2="448" y2="92" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(18 20)">
+    <path d="M20 16 H72 C81 16 88 23 88 32 V88 C88 97 81 104 72 104 H20 C11 104 4 97 4 88 V32 C4 23 11 16 20 16Z" fill="#0B1020"/>
+    <path d="M28 48 L45 32 L64 44 L58 72 L34 74 Z" fill="none" stroke="url(#hg02Grad)" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="28" cy="48" r="6" fill="#EC4899"/>
+    <circle cx="45" cy="32" r="6" fill="#6366F1"/>
+    <circle cx="64" cy="44" r="6" fill="#06B6D4"/>
+    <circle cx="58" cy="72" r="6" fill="#14B8A6"/>
+    <circle cx="34" cy="74" r="6" fill="#F59E0B"/>
+    <path d="M30 84 H68" stroke="#F8FAFC" stroke-width="5" stroke-linecap="round" opacity=".92"/>
+
+    <text x="122" y="79" font-family="'Segoe UI Variable Display','Segoe UI',Arial,sans-serif" font-weight="850" font-size="64" letter-spacing="0" fill="#0B1020">Hire</text>
+    <text x="255" y="79" font-family="'Segoe UI Variable Display','Segoe UI',Arial,sans-serif" font-weight="850" font-size="64" letter-spacing="0" fill="url(#hg02Text)">GEN</text>
+    <path d="M255 91 H414" stroke="url(#hg02Text)" stroke-width="7" stroke-linecap="round"/>
+    <text x="122" y="113" font-family="'Segoe UI Variable','Segoe UI',Arial,sans-serif" font-weight="650" font-size="15" letter-spacing=".08em" fill="#64748B">SKILL-GRAPH HIRING</text>
+  </g>
+</svg>

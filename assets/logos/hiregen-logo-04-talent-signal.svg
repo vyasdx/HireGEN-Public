@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 160" width="100%" height="100%" role="img" aria-labelledby="title desc">
+  <title id="title">HireGEN logo concept 04 - Talent Signal</title>
+  <desc id="desc">HireGEN wordmark with a signal-map mark for discovering hidden talent.</desc>
+  <defs>
+    <linearGradient id="hg04Signal" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="45%" stop-color="#EC4899"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <linearGradient id="hg04Capsule" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F766E"/>
+      <stop offset="100%" stop-color="#0891B2"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(18 20)">
+    <rect x="0" y="16" width="88" height="88" rx="20" fill="#F8FAFC" stroke="#DCE3EC" stroke-width="2"/>
+    <circle cx="44" cy="60" r="29" fill="#0B1020"/>
+    <path d="M26 64 C34 44 50 78 62 52" fill="none" stroke="url(#hg04Signal)" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="26" cy="64" r="5" fill="#F59E0B"/>
+    <circle cx="62" cy="52" r="5" fill="#4F46E5"/>
+    <path d="M70 29 C78 36 82 47 82 60" fill="none" stroke="#06B6D4" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+    <path d="M18 91 C10 84 6 73 6 60" fill="none" stroke="#EC4899" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+
+    <text x="120" y="79" font-family="'Segoe UI Variable Display','Segoe UI',Arial,sans-serif" font-weight="800" font-size="64" letter-spacing="0" fill="#0B1020">Hire</text>
+    <rect x="252" y="25" width="160" height="68" rx="34" fill="url(#hg04Capsule)"/>
+    <text x="269" y="77" font-family="'Segoe UI Variable Display','Segoe UI',Arial,sans-serif" font-weight="850" font-size="62" letter-spacing="0" fill="#F8FAFC">GEN</text>
+    <text x="120" y="113" font-family="'Segoe UI Variable','Segoe UI',Arial,sans-serif" font-weight="650" font-size="15" letter-spacing=".08em" fill="#64748B">TIER-2/3 TALENT DISCOVERY</text>
+  </g>
+</svg>

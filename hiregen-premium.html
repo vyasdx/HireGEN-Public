@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HireGEN Studio - Skill proof for hiring</title>
+  <meta name="description" content="HireGEN is an India-first skill proof layer for candidates and hiring teams." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Segoe UI Variable"', '"Segoe UI"', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Roboto', 'Arial', 'sans-serif'],
+            display: ['"Segoe UI Variable Display"', '"Segoe UI"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          colors: {
+            ink: {
+              950: '#090D16',
+              900: '#101725',
+              800: '#172033',
+              700: '#2F3A4D',
+              600: '#4E5B70',
+              500: '#6E7A8D',
+              300: '#B8C1CF',
+              200: '#DCE3EC',
+              100: '#EEF3F7',
+              50: '#F8FAFC'
+            },
+            signal: {
+              indigo: '#4F46E5',
+              cyan: '#0891B2',
+              teal: '#0F766E',
+              green: '#15803D',
+              amber: '#B7791F',
+              coral: '#D65A31',
+              red: '#BE123C'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --panel: rgba(255,255,255,.76);
+      --panel-strong: rgba(255,255,255,.88);
+      --line: rgba(16,23,37,.10);
+      --shadow: 0 24px 70px rgba(16,23,37,.13);
+      --shadow-sm: 0 10px 30px rgba(16,23,37,.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      width: 100%;
+      overflow-x: hidden;
+      font-family: 'Segoe UI Variable', 'Segoe UI', Inter, -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+      color: #101725;
+      background:
+        linear-gradient(120deg, rgba(79,70,229,.08) 0%, transparent 28%),
+        linear-gradient(240deg, rgba(214,90,49,.08) 0%, transparent 30%),
+        linear-gradient(180deg, #F7FAFC 0%, #F1F5F8 46%, #FBF8F2 100%);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(16,23,37,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16,23,37,.035) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.82), transparent 72%);
+      z-index: -1;
+    }
+
+    .display {
+      font-family: 'Segoe UI Variable Display', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 720;
+      letter-spacing: 0;
+      line-height: 1.02;
+    }
+
+    header,
+    main {
+      width: 100vw;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    .shell {
+      border: 1px solid rgba(255,255,255,.75);
+      background: var(--panel);
+      backdrop-filter: blur(22px) saturate(160%);
+      -webkit-backdrop-filter: blur(22px) saturate(160%);
+      box-shadow: var(--shadow);
+    }
+
+    .surface {
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hairline { border-color: rgba(16,23,37,.10); }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 28px;
+      border: 1px solid rgba(16,23,37,.10);
+      background: rgba(255,255,255,.72);
+      color: #2F3A4D;
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #15803D;
+      box-shadow: 0 0 0 5px rgba(21,128,61,.12);
+    }
+
+    .btn {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 12px;
+      padding: 11px 17px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-dark {
+      color: white;
+      background: linear-gradient(180deg, #101725 0%, #172033 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 14px 28px rgba(16,23,37,.25);
+    }
+
+    .btn-light {
+      color: #101725;
+      border: 1px solid rgba(16,23,37,.10);
+      background: rgba(255,255,255,.78);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 8px 20px rgba(16,23,37,.08);
+    }
+
+    .btn-accent {
+      color: white;
+      background: linear-gradient(180deg, #D65A31 0%, #A43D21 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 14px 28px rgba(214,90,49,.24);
+    }
+
+    .hero-visual {
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.94), rgba(255,255,255,.68)),
+        linear-gradient(135deg, rgba(79,70,229,.08), rgba(214,90,49,.08));
+      min-width: 0;
+    }
+
+    .metric-ring {
+      background:
+        conic-gradient(#15803D 0 82%, rgba(16,23,37,.08) 82% 100%);
+      border-radius: 999px;
+      position: relative;
+    }
+
+    .metric-ring::after {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      background: white;
+      border-radius: 999px;
+      border: 1px solid rgba(16,23,37,.08);
+    }
+
+    .timeline-line {
+      background: linear-gradient(180deg, transparent, rgba(16,23,37,.16), transparent);
+    }
+
+    .scan {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scan::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: -40%;
+      height: 38%;
+      background: linear-gradient(180deg, transparent, rgba(8,145,178,.16), transparent);
+      animation: scan 4.4s ease-in-out infinite;
+    }
+
+    @keyframes scan {
+      0%, 16% { transform: translateY(0); opacity: 0; }
+      24% { opacity: 1; }
+      58% { opacity: 1; }
+      74%, 100% { transform: translateY(360%); opacity: 0; }
+    }
+
+    .ticker {
+      animation: ticker 26s linear infinite;
+    }
+
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .nav-link {
+      color: #4E5B70;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .nav-link:hover { color: #101725; }
+
+    .input {
+      min-height: 46px;
+      border-radius: 12px;
+      border: 1px solid rgba(16,23,37,.14);
+      background: rgba(255,255,255,.88);
+      padding: 0 14px;
+      outline: none;
+      color: #101725;
+      width: 100%;
+    }
+
+    .input:focus {
+      border-color: rgba(79,70,229,.45);
+      box-shadow: 0 0 0 4px rgba(79,70,229,.10);
+    }
+
+    .section {
+      width: 100%;
+      max-width: 1180px;
+      margin-inline: auto;
+      padding-inline: 24px;
+    }
+
+    @media (max-width: 720px) {
+      .section { padding-inline: 18px; }
+      .btn { width: 100%; }
+      .display { line-height: 1.06; }
+      header .btn {
+        width: auto;
+        min-height: 40px;
+        padding-inline: 12px;
+        font-size: 13px;
+      }
+      header .btn svg { display: none; }
+      .hero-visual {
+        margin-inline: -6px;
+        padding: 10px;
+      }
+      .hero-visual > div {
+        min-width: 0;
+      }
+      .hero-visual .grid {
+        min-width: 0;
+      }
+      .hero-visual [class*="grid-cols-3"] {
+        grid-template-columns: repeat(3, minmax(86px, 1fr));
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+    }
+
+    @media (max-width: 460px) {
+      h1.display { font-size: clamp(42px, 13vw, 52px); }
+      .section {
+        max-width: 100vw;
+        overflow-x: hidden;
+      }
+      .shell { border-radius: 18px; }
+      header .shell {
+        width: calc(100vw - 24px);
+        max-width: calc(100vw - 24px);
+      }
+      .shell > div { gap: 8px; }
+      .shell .leading-tight div:last-child { display: none; }
+      .hero-visual {
+        max-width: calc(100vw - 24px);
+        overflow: hidden;
+      }
+      .hero-visual .tag {
+        max-width: 132px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .hero-visual .rounded-2xl,
+      .hero-visual .rounded-\\[20px\\],
+      .hero-visual .rounded-\\[22px\\] {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="sticky top-3 z-50 px-3">
+    <div class="shell mx-auto max-w-7xl rounded-2xl px-3 py-3">
+      <div class="flex items-center justify-between gap-4">
+        <a href="#" class="flex items-center gap-3">
+          <div class="grid h-9 w-9 place-items-center rounded-xl bg-ink-900 text-white shadow-sm">
+            <span class="font-bold">H</span>
+          </div>
+          <div class="leading-tight">
+            <div class="display text-lg">HireGEN</div>
+            <div class="text-[11px] font-semibold text-ink-500">India skill proof network</div>
+          </div>
+        </a>
+
+        <nav class="hidden items-center gap-7 lg:flex">
+          <a href="#proof" class="nav-link">Proof Profile</a>
+          <a href="#validation" class="nav-link">Validation</a>
+          <a href="#recruiters" class="nav-link">Recruiters</a>
+          <a href="#pricing" class="nav-link">Pricing</a>
+          <a href="#faq" class="nav-link">FAQ</a>
+        </nav>
+
+        <div class="flex items-center gap-2">
+          <a href="#demo" class="hidden rounded-xl px-3 py-2 text-sm font-bold text-ink-700 hover:bg-white/60 sm:inline-flex">Sign in</a>
+          <a href="#join" class="btn btn-dark !min-h-10 !px-4 !py-2">
+            Join beta
+            <i data-lucide="arrow-right" class="h-4 w-4"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section pt-20 pb-16 lg:pt-24">
+      <div class="grid items-center gap-10 lg:grid-cols-[.94fr_1.06fr]">
+        <div>
+          <div class="tag mb-5"><span class="dot"></span>Closed beta opens Q3 2026</div>
+          <h1 class="display max-w-3xl text-5xl text-ink-950 sm:text-6xl lg:text-[76px]">
+            Hiring should trust proof, not polish.
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg leading-8 text-ink-600">
+            HireGEN turns projects, code, validation tests, and work history into a living skill profile. Candidates get discovered on merit. Hiring teams see evidence before outreach.
+          </p>
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+            <a href="#join" class="btn btn-dark">
+              Create proof profile
+              <i data-lucide="sparkles" class="h-4 w-4"></i>
+            </a>
+            <a href="#recruiters" class="btn btn-light">
+              See recruiter view
+              <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
+            </a>
+          </div>
+          <div class="mt-7 grid max-w-xl grid-cols-3 gap-3">
+            <div class="surface rounded-2xl p-4">
+              <div class="text-2xl font-bold text-ink-950">15 min</div>
+              <div class="mt-1 text-xs font-semibold text-ink-500">skill checks</div>
+            </div>
+            <div class="surface rounded-2xl p-4">
+              <div class="text-2xl font-bold text-ink-950">0 INR</div>
+              <div class="mt-1 text-xs font-semibold text-ink-500">for candidates</div>
+            </div>
+            <div class="surface rounded-2xl p-4">
+              <div class="text-2xl font-bold text-ink-950">10x</div>
+              <div class="mt-1 text-xs font-semibold text-ink-500">less noise</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="demo" class="hero-visual surface rounded-[28px] p-3">
+          <div class="rounded-[22px] border border-ink-900/10 bg-white/78">
+            <div class="flex items-center justify-between border-b border-ink-900/10 px-4 py-3">
+              <div class="flex items-center gap-2">
+                <span class="h-3 w-3 rounded-full bg-[#E56B5D]"></span>
+                <span class="h-3 w-3 rounded-full bg-[#E8B84E]"></span>
+                <span class="h-3 w-3 rounded-full bg-[#63B37A]"></span>
+              </div>
+              <div class="tag !py-1 !text-[11px]"><i data-lucide="shield-check" class="h-3.5 w-3.5"></i>Verified role match</div>
+            </div>
+
+            <div class="grid gap-3 p-3 lg:grid-cols-[1fr_.86fr]">
+              <div class="scan rounded-2xl border border-ink-900/10 bg-white p-5">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="flex items-center gap-3">
+                    <div class="grid h-12 w-12 place-items-center rounded-2xl bg-ink-900 text-sm font-bold text-white">PA</div>
+                    <div>
+                      <div class="font-bold text-ink-950">Priya A.</div>
+                      <div class="text-sm text-ink-500">Frontend Engineer - Hyderabad</div>
+                    </div>
+                  </div>
+                  <div class="tag !border-green-700/20 !bg-green-50 !text-green-700">92 match</div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-3 gap-2">
+                  <div class="rounded-xl border border-ink-900/10 bg-ink-50 p-3">
+                    <div class="text-xs text-ink-500">React</div>
+                    <div class="mt-1 text-xl font-bold text-ink-950">94</div>
+                  </div>
+                  <div class="rounded-xl border border-ink-900/10 bg-ink-50 p-3">
+                    <div class="text-xs text-ink-500">Python</div>
+                    <div class="mt-1 text-xl font-bold text-ink-950">88</div>
+                  </div>
+                  <div class="rounded-xl border border-ink-900/10 bg-ink-50 p-3">
+                    <div class="text-xs text-ink-500">SQL</div>
+                    <div class="mt-1 text-xl font-bold text-ink-950">81</div>
+                  </div>
+                </div>
+
+                <div class="mt-5 rounded-2xl border border-ink-900/10 bg-[#F7FAFC] p-4">
+                  <div class="mb-3 flex items-center justify-between">
+                    <div class="text-sm font-bold">Proof ledger</div>
+                    <div class="text-xs font-semibold text-ink-500">4 signals</div>
+                  </div>
+                  <div class="space-y-3 text-sm">
+                    <div class="flex items-center gap-3">
+                      <i data-lucide="github" class="h-4 w-4 text-ink-500"></i>
+                      <span class="flex-1">12 merged PRs across 3 repos</span>
+                      <span class="font-bold text-green-700">verified</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <i data-lucide="file-check-2" class="h-4 w-4 text-ink-500"></i>
+                      <span class="flex-1">System design case study</span>
+                      <span class="font-bold text-green-700">reviewed</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <i data-lucide="timer" class="h-4 w-4 text-ink-500"></i>
+                      <span class="flex-1">15-min React adaptive test</span>
+                      <span class="font-bold text-amber-700">fresh</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid gap-3">
+                <div class="rounded-2xl border border-ink-900/10 bg-ink-950 p-5 text-white">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <div class="text-xs font-semibold uppercase tracking-wide text-white/[0.55]">Matched role</div>
+                      <div class="mt-1 font-bold">Frontend Engineer</div>
+                    </div>
+                    <div class="metric-ring h-20 w-20">
+                      <div class="absolute inset-0 z-10 grid place-items-center text-lg font-bold text-ink-950">82</div>
+                    </div>
+                  </div>
+                  <div class="mt-4 text-sm text-white/70">Razorpay-style fintech - Remote - 18-26 LPA</div>
+                  <button class="mt-5 min-h-10 w-full rounded-xl bg-white text-sm font-bold text-ink-950">Request intro</button>
+                </div>
+
+                <div class="rounded-2xl border border-ink-900/10 bg-white p-5">
+                  <div class="flex items-center justify-between">
+                    <div class="font-bold">AI coach</div>
+                    <i data-lucide="bot" class="h-5 w-5 text-signal-cyan"></i>
+                  </div>
+                  <p class="mt-3 text-sm leading-6 text-ink-600">
+                    One portfolio project can unlock senior frontend matches. Recommended next proof: performance audit with before/after metrics.
+                  </p>
+                  <div class="mt-4 flex flex-wrap gap-2">
+                    <span class="tag !py-1 !text-[11px]">+12% fit</span>
+                    <span class="tag !py-1 !text-[11px]">3 hrs</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section py-8">
+      <div class="surface overflow-hidden rounded-2xl py-5">
+        <div class="mb-4 text-center text-xs font-bold uppercase tracking-[.18em] text-ink-500">Built for hiring teams across India</div>
+        <div class="flex w-max gap-10 ticker px-6 text-2xl font-bold text-ink-300">
+          <span>Razorpay</span><span>Zerodha</span><span>Postman</span><span>Cred</span><span>Freshworks</span><span>Zoho</span><span>Chargebee</span>
+          <span>Razorpay</span><span>Zerodha</span><span>Postman</span><span>Cred</span><span>Freshworks</span><span>Zoho</span><span>Chargebee</span>
+        </div>
+        <div class="mt-4 text-center text-xs italic text-ink-500">Company names are illustrative target profiles.</div>
+      </div>
+    </section>
+
+    <section id="proof" class="section py-20">
+      <div class="grid gap-10 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
+        <div>
+          <div class="tag mb-4">Proof Profile</div>
+          <h2 class="display text-4xl text-ink-950 sm:text-5xl">A career identity built from evidence.</h2>
+          <p class="mt-5 text-lg leading-8 text-ink-600">
+            The profile is not another resume skin. It is a structured skill graph backed by source material: repos, projects, shipped work, validation checks, and role outcomes.
+          </p>
+          <div class="mt-7 space-y-4">
+            <div class="flex gap-3">
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white shadow-sm"><i data-lucide="network" class="h-4 w-4 text-signal-indigo"></i></div>
+              <div><div class="font-bold">Skills are connected, not listed.</div><div class="mt-1 text-sm leading-6 text-ink-600">React connects to frontend architecture, performance, testing, accessibility, and product judgment.</div></div>
+            </div>
+            <div class="flex gap-3">
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white shadow-sm"><i data-lucide="history" class="h-4 w-4 text-signal-coral"></i></div>
+              <div><div class="font-bold">Proof decays over time.</div><div class="mt-1 text-sm leading-6 text-ink-600">Each score carries freshness, so recruiters know what is current and what needs revalidation.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="surface rounded-[26px] p-5">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="rounded-2xl border border-ink-900/10 bg-white p-5">
+              <div class="mb-4 flex items-center justify-between">
+                <div class="font-bold">Skill graph</div>
+                <span class="tag !py-1 !text-[11px]">live</span>
+              </div>
+              <div class="space-y-3">
+                <div>
+                  <div class="mb-1 flex justify-between text-xs font-semibold text-ink-500"><span>Frontend architecture</span><span>91</span></div>
+                  <div class="h-2 rounded-full bg-ink-100"><div class="h-full w-[91%] rounded-full bg-signal-indigo"></div></div>
+                </div>
+                <div>
+                  <div class="mb-1 flex justify-between text-xs font-semibold text-ink-500"><span>API design</span><span>84</span></div>
+                  <div class="h-2 rounded-full bg-ink-100"><div class="h-full w-[84%] rounded-full bg-signal-cyan"></div></div>
+                </div>
+                <div>
+                  <div class="mb-1 flex justify-between text-xs font-semibold text-ink-500"><span>Testing discipline</span><span>79</span></div>
+                  <div class="h-2 rounded-full bg-ink-100"><div class="h-full w-[79%] rounded-full bg-signal-green"></div></div>
+                </div>
+                <div>
+                  <div class="mb-1 flex justify-between text-xs font-semibold text-ink-500"><span>System design</span><span>66</span></div>
+                  <div class="h-2 rounded-full bg-ink-100"><div class="h-full w-[66%] rounded-full bg-signal-amber"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-ink-900/10 bg-white p-5">
+              <div class="mb-4 font-bold">Evidence mix</div>
+              <div class="grid h-48 place-items-center">
+                <div class="relative h-40 w-40 rounded-full" style="background: conic-gradient(#4F46E5 0 38%, #0891B2 38% 64%, #15803D 64% 84%, #B7791F 84% 100%);">
+                  <div class="absolute inset-5 grid place-items-center rounded-full bg-white text-center">
+                    <div>
+                      <div class="text-3xl font-bold">4</div>
+                      <div class="text-xs font-semibold text-ink-500">proof types</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-xs font-semibold text-ink-600">
+                <span><span class="mr-1 inline-block h-2 w-2 rounded-full bg-signal-indigo"></span>Projects</span>
+                <span><span class="mr-1 inline-block h-2 w-2 rounded-full bg-signal-cyan"></span>Repos</span>
+                <span><span class="mr-1 inline-block h-2 w-2 rounded-full bg-signal-green"></span>Tests</span>
+                <span><span class="mr-1 inline-block h-2 w-2 rounded-full bg-signal-amber"></span>Reviews</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="validation" class="section py-20">
+      <div class="mb-10 max-w-3xl">
+        <div class="tag mb-4">Validation</div>
+        <h2 class="display text-4xl text-ink-950 sm:text-5xl">Short checks, strong signal.</h2>
+        <p class="mt-5 text-lg leading-8 text-ink-600">HireGEN should not become a homework factory. Validation is lightweight, adaptive, and tied to actual job requirements.</p>
+      </div>
+
+      <div class="grid gap-5 lg:grid-cols-4">
+        <div class="surface rounded-2xl p-6">
+          <div class="mb-5 grid h-11 w-11 place-items-center rounded-xl bg-ink-950 text-white"><i data-lucide="upload-cloud" class="h-5 w-5"></i></div>
+          <h3 class="text-lg font-bold">Import evidence</h3>
+          <p class="mt-3 text-sm leading-6 text-ink-600">GitHub, portfolio, work history, and optional resume are parsed into a draft skill graph.</p>
+        </div>
+        <div class="surface rounded-2xl p-6">
+          <div class="mb-5 grid h-11 w-11 place-items-center rounded-xl bg-signal-indigo text-white"><i data-lucide="clipboard-check" class="h-5 w-5"></i></div>
+          <h3 class="text-lg font-bold">Validate claims</h3>
+          <p class="mt-3 text-sm leading-6 text-ink-600">Adaptive checks test only the skills that matter for the candidate's target roles.</p>
+        </div>
+        <div class="surface rounded-2xl p-6">
+          <div class="mb-5 grid h-11 w-11 place-items-center rounded-xl bg-signal-teal text-white"><i data-lucide="fingerprint" class="h-5 w-5"></i></div>
+          <h3 class="text-lg font-bold">Attach confidence</h3>
+          <p class="mt-3 text-sm leading-6 text-ink-600">Every skill gets score, source, freshness, and confidence, so matches are explainable.</p>
+        </div>
+        <div class="surface rounded-2xl p-6">
+          <div class="mb-5 grid h-11 w-11 place-items-center rounded-xl bg-signal-coral text-white"><i data-lucide="briefcase-business" class="h-5 w-5"></i></div>
+          <h3 class="text-lg font-bold">Match to roles</h3>
+          <p class="mt-3 text-sm leading-6 text-ink-600">Recruiters receive a shortlist with proof, gaps, compensation fit, and intro readiness.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="recruiters" class="section py-20">
+      <div class="grid gap-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
+        <div class="surface rounded-[26px] p-4">
+          <div class="rounded-[20px] border border-ink-900/10 bg-white">
+            <div class="flex items-center justify-between border-b border-ink-900/10 p-4">
+              <div>
+                <div class="font-bold">Recruiter shortlist</div>
+                <div class="mt-1 text-xs font-semibold text-ink-500">Frontend Engineer - Bengaluru - 22 candidates filtered to 5</div>
+              </div>
+              <button class="rounded-xl bg-ink-950 px-4 py-2 text-sm font-bold text-white">Export</button>
+            </div>
+            <div class="divide-y divide-ink-900/10">
+              <div class="grid gap-3 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div class="flex items-center gap-3">
+                  <div class="grid h-10 w-10 place-items-center rounded-xl bg-ink-100 font-bold">PA</div>
+                  <div>
+                    <div class="font-bold">Priya A. <span class="ml-2 text-sm font-semibold text-green-700">94% fit</span></div>
+                    <div class="text-sm text-ink-500">React, API design, performance - Hyderabad</div>
+                  </div>
+                </div>
+                <button class="btn btn-light !min-h-10 !px-3 !py-2">View proof</button>
+              </div>
+              <div class="grid gap-3 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div class="flex items-center gap-3">
+                  <div class="grid h-10 w-10 place-items-center rounded-xl bg-ink-100 font-bold">NK</div>
+                  <div>
+                    <div class="font-bold">Nikhil K. <span class="ml-2 text-sm font-semibold text-green-700">91% fit</span></div>
+                    <div class="text-sm text-ink-500">Next.js, testing, design systems - Indore</div>
+                  </div>
+                </div>
+                <button class="btn btn-light !min-h-10 !px-3 !py-2">View proof</button>
+              </div>
+              <div class="grid gap-3 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div class="flex items-center gap-3">
+                  <div class="grid h-10 w-10 place-items-center rounded-xl bg-ink-100 font-bold">SM</div>
+                  <div>
+                    <div class="font-bold">Sara M. <span class="ml-2 text-sm font-semibold text-amber-700">86% fit</span></div>
+                    <div class="text-sm text-ink-500">Frontend, analytics, accessibility - Kochi</div>
+                  </div>
+                </div>
+                <button class="btn btn-light !min-h-10 !px-3 !py-2">View proof</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="tag mb-4">For Companies</div>
+          <h2 class="display text-4xl text-ink-950 sm:text-5xl">Stop sourcing. Start deciding.</h2>
+          <p class="mt-5 text-lg leading-8 text-ink-600">
+            The recruiter view should feel like a decision cockpit: fewer candidates, stronger signal, and a clear reason for every recommendation.
+          </p>
+          <div class="mt-7 grid gap-3">
+            <div class="surface rounded-2xl p-4">
+              <div class="flex items-center gap-3">
+                <i data-lucide="check-circle-2" class="h-5 w-5 text-green-700"></i>
+                <div><div class="font-bold">Pay per accepted intro</div><div class="text-sm text-ink-500">Aligned incentives instead of resume database subscriptions.</div></div>
+              </div>
+            </div>
+            <div class="surface rounded-2xl p-4">
+              <div class="flex items-center gap-3">
+                <i data-lucide="map" class="h-5 w-5 text-signal-cyan"></i>
+                <div><div class="font-bold">Tier-2/3 discovery</div><div class="text-sm text-ink-500">Find strong candidates outside the usual network graph.</div></div>
+              </div>
+            </div>
+            <div class="surface rounded-2xl p-4">
+              <div class="flex items-center gap-3">
+                <i data-lucide="activity" class="h-5 w-5 text-signal-coral"></i>
+                <div><div class="font-bold">Outcome tracking</div><div class="text-sm text-ink-500">Time-to-hire, intro acceptance, retention, and skill-gap patterns.</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing" class="section py-20">
+      <div class="rounded-[28px] bg-ink-950 p-6 text-white sm:p-8 lg:p-10">
+        <div class="grid gap-8 lg:grid-cols-[.95fr_1.05fr] lg:items-center">
+          <div>
+            <div class="tag !border-white/10 !bg-white/10 !text-white">Aligned pricing</div>
+            <h2 class="display mt-5 text-4xl sm:text-5xl">Candidates never pay. Recruiters pay for outcomes.</h2>
+            <p class="mt-5 text-lg leading-8 text-white/70">
+              This is the trust decision. If candidates are the supply we want to empower, their profile, validation, and coaching stay free.
+            </p>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="rounded-2xl border border-white/10 bg-white/[0.08] p-6">
+              <div class="text-sm font-bold text-white/60">Candidate</div>
+              <div class="mt-3 text-4xl font-bold">0 INR</div>
+              <div class="mt-3 text-sm leading-6 text-white/[0.65]">Proof profile, validation basics, matching, and career coach.</div>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-white p-6 text-ink-950">
+              <div class="text-sm font-bold text-ink-500">Company</div>
+              <div class="mt-3 text-4xl font-bold">2k-10k</div>
+              <div class="mt-3 text-sm leading-6 text-ink-600">Per accepted intro, with enterprise dashboards when hiring volume scales.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="join" class="section py-20">
+      <div class="surface rounded-[28px] p-6 sm:p-8 lg:p-10">
+        <div class="grid gap-8 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
+          <div>
+            <div class="tag mb-4">Early access</div>
+            <h2 class="display text-4xl text-ink-950 sm:text-5xl">Build the first trusted proof layer with us.</h2>
+            <p class="mt-5 text-lg leading-8 text-ink-600">Join the beta list as a candidate, recruiter, or design partner. The first version should be narrow, honest, and useful before it is big.</p>
+          </div>
+          <form class="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+            <label class="sr-only" for="email">Email</label>
+            <input id="email" class="input" type="email" placeholder="you@company.com" />
+            <label class="sr-only" for="role">Role</label>
+            <select id="role" class="input">
+              <option>Candidate</option>
+              <option>Recruiter</option>
+              <option>Design partner</option>
+            </select>
+            <button type="button" class="btn btn-accent">
+              Request invite
+              <i data-lucide="send" class="h-4 w-4"></i>
+            </button>
+            <p class="text-xs font-semibold text-ink-500 sm:col-span-3">Mockup only. This form is ready for wiring when the real app is scaffolded.</p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="section pb-24">
+      <div class="mx-auto max-w-3xl">
+        <div class="text-center">
+          <div class="tag mb-4">FAQ</div>
+          <h2 class="display text-4xl text-ink-950">What this is, and what it is not.</h2>
+        </div>
+        <div class="mt-8 space-y-3">
+          <details class="surface rounded-2xl p-5">
+            <summary class="cursor-pointer font-bold">Is HireGEN a LinkedIn replacement?</summary>
+            <p class="mt-3 text-sm leading-6 text-ink-600">No. LinkedIn remains identity and network. HireGEN is the proof and matching layer that can sit beside it.</p>
+          </details>
+          <details class="surface rounded-2xl p-5">
+            <summary class="cursor-pointer font-bold">What makes this hard to copy?</summary>
+            <p class="mt-3 text-sm leading-6 text-ink-600">The defensible part is not the landing page or AI parsing. It is the validation rubric, recruiter trust, candidate supply, and outcome data loop.</p>
+          </details>
+          <details class="surface rounded-2xl p-5">
+            <summary class="cursor-pointer font-bold">Where should the MVP start?</summary>
+            <p class="mt-3 text-sm leading-6 text-ink-600">A narrow segment: Indian frontend or full-stack engineers with 1-4 years of experience, manually curated until the quality bar is obvious.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="section pb-8">
+    <div class="flex flex-col justify-between gap-4 border-t border-ink-900/10 pt-6 text-sm text-ink-500 sm:flex-row">
+      <div><span class="font-bold text-ink-800">HireGEN</span> - The fastest path from skill to job.</div>
+      <div>v0.3 premium concept - separate mockup file</div>
+    </div>
+  </footer>
+
+  <script>
+    if (window.lucide) {
+      window.lucide.createIcons({ attrs: { 'stroke-width': 2 } });
+    }
+  </script>
+</body>
+</html>

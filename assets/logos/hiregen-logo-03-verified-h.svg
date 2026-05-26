@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 160" width="100%" height="100%" role="img" aria-labelledby="title desc">
+  <title id="title">HireGEN logo concept 03 - Verified H</title>
+  <desc id="desc">HireGEN wordmark with a verified H monogram and evidence check.</desc>
+  <defs>
+    <linearGradient id="hg03Mark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#101725"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="hg03Badge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(18 20)">
+    <rect x="0" y="16" width="88" height="88" rx="24" fill="url(#hg03Mark)"/>
+    <path d="M27 36 V84 M61 36 V84 M28 60 H60" stroke="#F8FAFC" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="70" cy="30" r="17" fill="url(#hg03Badge)" stroke="#F8FAFC" stroke-width="4"/>
+    <path d="M62 30 L68 36 L79 23" fill="none" stroke="#F8FAFC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <text x="120" y="79" font-family="'Segoe UI Variable Display','Segoe UI',Arial,sans-serif" font-weight="850" font-size="64" letter-spacing="0" fill="#0B1020">Hire</text>
+    <text x="254" y="79" font-family="'Segoe UI Variable Display','Segoe UI',Arial,sans-serif" font-weight="850" font-size="64" letter-spacing="0" fill="#0B1020">GEN</text>
+    <rect x="252" y="90" width="163" height="8" rx="4" fill="url(#hg03Badge)"/>
+    <text x="120" y="113" font-family="'Segoe UI Variable','Segoe UI',Arial,sans-serif" font-weight="650" font-size="15" letter-spacing=".08em" fill="#64748B">VERIFIED SKILL SIGNALS</text>
+  </g>
+</svg>

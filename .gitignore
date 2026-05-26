@@ -1,0 +1,46 @@
+# Local tooling state (per-machine, not shared)
+.claude/settings.local.json
+.claude/.session/
+
+# Local/private V-Office context
+.voffice/company-feed.md
+.voffice/company-response.md
+
+# Node.js / Next.js (future-proofing for scaffold)
+node_modules/
+.next/
+dist/
+build/
+out/
+.turbo/
+*.tsbuildinfo
+
+# Environment files (never commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor state
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Misc
+*.pid
+*.seed

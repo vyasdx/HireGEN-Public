@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HireGEN Candidate Badges</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif;
+      color: #0B1020;
+      background: linear-gradient(180deg, #F8FAFC, #EEF3F7);
+    }
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 38px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 0 0 28px;
+      color: #64748B;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .card {
+      background: rgba(255,255,255,.9);
+      border: 1px solid rgba(11,16,32,.1);
+      border-radius: 20px;
+      box-shadow: 0 18px 48px rgba(15,23,42,.08);
+      padding: 22px;
+    }
+    img {
+      width: 72px;
+      height: 72px;
+      display: block;
+      margin-bottom: 16px;
+    }
+    h2 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    .meta {
+      color: #64748B;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>HireGEN Candidate Badges</h1>
+    <p>Icon-only trust badges for candidate profiles. These should appear beside skills, projects, and recruiter-facing proof cards.</p>
+    <section class="grid">
+      <article class="card">
+        <img src="./hiregen-badge-git-verified.svg" alt="Git Verified badge" />
+        <h2>Git Verified</h2>
+        <div class="meta">Repo history, commits, and project ownership are verified.</div>
+      </article>
+      <article class="card">
+        <img src="./hiregen-badge-lab-proof.svg" alt="Lab Proof badge" />
+        <h2>Lab Proof</h2>
+        <div class="meta">Skill was tested inside a controlled task environment.</div>
+      </article>
+      <article class="card">
+        <img src="./hiregen-badge-project-builder.svg" alt="Project Builder badge" />
+        <h2>Project Builder</h2>
+        <div class="meta">Candidate has strong hands-on project evidence.</div>
+      </article>
+      <article class="card">
+        <img src="./hiregen-badge-skill-graph.svg" alt="Skill Graph badge" />
+        <h2>Skill Graph</h2>
+        <div class="meta">High-confidence skill graph built from multiple evidence sources.</div>
+      </article>
+      <article class="card">
+        <img src="./hiregen-badge-ai-ready.svg" alt="AI Ready badge" />
+        <h2>AI Ready</h2>
+        <div class="meta">Verified ability to work with AI-era tools and workflows.</div>
+      </article>
+      <article class="card">
+        <img src="./hiregen-badge-career-bridge.svg" alt="Career Bridge badge" />
+        <h2>Career Bridge</h2>
+        <div class="meta">Candidate has a validated transition roadmap for target role.</div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

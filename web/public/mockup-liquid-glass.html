@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HireGEN — Get hired based on skills, not resume</title>
+  <meta name="description" content="HireGEN proves what you can do. Skill-validated hiring for India's next generation of talent." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Segoe UI Variable"', '"Segoe UI"', '-apple-system', 'BlinkMacSystemFont', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+            display: ['"Segoe UI Variable Display"', '"Segoe UI"', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            ink: {
+              900: '#0B1020',
+              800: '#1A2236',
+              700: '#334155',
+              500: '#64748B',
+              300: '#CBD5E1',
+              200: '#E2E8F0',
+              100: '#F1F5F9',
+              50:  '#F8FAFC',
+            },
+            brand: {
+              50:  '#EEF2FF',
+              100: '#E0E7FF',
+              300: '#A5B4FC',
+              500: '#6366F1',
+              600: '#4F46E5',
+              700: '#4338CA',
+            },
+            accent: {
+              500: '#F59E0B',
+              600: '#D97706',
+            },
+            cyan: { 500: '#06B6D4' },
+            pink: { 500: '#EC4899' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI Variable', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-feature-settings: 'ss01', 'cv01';
+      /* The colorful canvas BEHIND all glass — without this, the blur has nothing to blur */
+      background:
+        radial-gradient(1200px 700px at 10% -10%, rgba(99,102,241,0.35), transparent 60%),
+        radial-gradient(900px 600px at 90% 0%, rgba(245,158,11,0.30), transparent 60%),
+        radial-gradient(1000px 700px at 20% 110%, rgba(6,182,212,0.30), transparent 60%),
+        radial-gradient(900px 600px at 95% 95%, rgba(236,72,153,0.25), transparent 60%),
+        linear-gradient(180deg, #F4F6FF 0%, #FBF6EF 60%, #EFF7FB 100%);
+      background-attachment: fixed;
+      color: #0B1020;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============ LIQUID GLASS PRIMITIVES ============ */
+    .glass {
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.55);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.75),
+        inset 0 0 0 1px rgba(255,255,255,0.15),
+        0 1px 2px rgba(15,23,42,0.04),
+        0 20px 60px -10px rgba(15,23,42,0.18);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Specular sheen — the bright streak at the top edge that makes glass read as glass */
+    .glass::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 35%);
+      pointer-events: none;
+      border-radius: inherit;
+    }
+    /* Refractive rim — slightly brighter inner edge */
+    .glass::after {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow: inset 0 0 24px rgba(255,255,255,0.18);
+    }
+    .glass-soft {
+      background: rgba(255,255,255,0.42);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.5);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.65),
+        0 8px 24px rgba(15,23,42,0.08);
+      border-radius: 16px;
+    }
+    .glass-strong {
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(32px) saturate(200%);
+      -webkit-backdrop-filter: blur(32px) saturate(200%);
+      border: 1px solid rgba(255,255,255,0.6);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.85),
+        0 20px 60px -10px rgba(15,23,42,0.22);
+      border-radius: 24px;
+    }
+    .glass-dark {
+      background: rgba(11,16,32,0.55);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: white;
+      border-radius: 20px;
+    }
+
+    .glass:hover, .glass-soft:hover {
+      transform: translateY(-2px);
+      transition: transform .25s ease;
+    }
+
+    .gradient-text {
+      background: linear-gradient(120deg, #4F46E5 0%, #06B6D4 40%, #EC4899 75%, #F59E0B 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .blob {
+      position: absolute;
+      border-radius: 9999px;
+      filter: blur(80px);
+      pointer-events: none;
+      mix-blend-mode: normal;
+      opacity: 0.7;
+      z-index: 0;
+    }
+
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 9999px;
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(12px) saturate(160%);
+      -webkit-backdrop-filter: blur(12px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.6);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 2px 8px rgba(15,23,42,0.06);
+      color: #4338CA;
+      font-size: 12px; font-weight: 600; letter-spacing: .01em;
+    }
+    .chip-amber { color: #B45309; }
+
+    .dot {
+      width: 6px; height: 6px; border-radius: 9999px; background: #6366F1;
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.18);
+    }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+      background: linear-gradient(180deg, #0B1020 0%, #1A2236 100%);
+      color: white; font-weight: 600;
+      padding: 12px 22px; border-radius: 12px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.18),
+        0 10px 24px rgba(11,16,32,0.32);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 14px 32px rgba(11,16,32,0.4); }
+
+    .btn-glass {
+      display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 6px 16px rgba(15,23,42,0.08);
+      color: #0B1020; font-weight: 600;
+      padding: 12px 22px; border-radius: 12px;
+      transition: transform .2s ease;
+    }
+    .btn-glass:hover { transform: translateY(-1px); }
+
+    .btn-accent {
+      display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+      background: linear-gradient(180deg, #F59E0B 0%, #D97706 100%);
+      color: white; font-weight: 600;
+      padding: 10px 18px; border-radius: 10px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 20px rgba(217,119,6,0.35);
+    }
+
+    .marquee-track { animation: scroll 36s linear infinite; }
+    @keyframes scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    .float-a { animation: floatA 14s ease-in-out infinite; }
+    .float-b { animation: floatB 18s ease-in-out infinite; }
+    .float-c { animation: floatC 22s ease-in-out infinite; }
+    @keyframes floatA { 0%,100%{transform:translate(0,0)} 50%{transform:translate(30px,-20px)} }
+    @keyframes floatB { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-40px,30px)} }
+    @keyframes floatC { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,40px)} }
+
+    /* Microsoft-style display weight — slightly heavier, tight tracking */
+    .display {
+      font-family: 'Segoe UI Variable Display', 'Segoe UI', -apple-system, sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.04;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-brand-100 selection:text-brand-700">
+
+  <!-- ambient blobs that the glass refracts -->
+  <div class="blob bg-brand-500 w-[520px] h-[520px] -top-32 -left-32 float-a"></div>
+  <div class="blob bg-accent-500 w-[480px] h-[480px] top-[10%] right-[-10%] float-b"></div>
+  <div class="blob bg-cyan-500 w-[420px] h-[420px] top-[60%] left-[-10%] float-c"></div>
+  <div class="blob bg-pink-500 w-[420px] h-[420px] top-[80%] right-[10%] float-a opacity-50"></div>
+
+  <!-- =================== NAV =================== -->
+  <header class="sticky top-3 z-40 px-3">
+    <div class="max-w-7xl mx-auto glass !rounded-2xl h-14 px-4 flex items-center justify-between">
+      <a href="#" class="relative z-10 flex items-center gap-2">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 via-pink-500 to-accent-500 flex items-center justify-center text-white font-bold shadow-md">H</div>
+        <span class="display text-lg">HireGEN</span>
+        <span class="chip !py-0.5 !px-2 !text-[10px] ml-1">India · Beta</span>
+      </a>
+      <nav class="relative z-10 hidden md:flex items-center gap-7 text-sm text-ink-700">
+        <a href="#how" class="hover:text-ink-900">How it works</a>
+        <a href="#features" class="hover:text-ink-900">Features</a>
+        <a href="#companies" class="hover:text-ink-900">Companies</a>
+        <a href="#candidates" class="hover:text-ink-900">Candidates</a>
+        <a href="#faq" class="hover:text-ink-900">FAQ</a>
+      </nav>
+      <div class="relative z-10 flex items-center gap-3">
+        <a href="#" class="hidden sm:inline text-sm text-ink-700 hover:text-ink-900">Sign in</a>
+        <a href="#cta" class="btn-primary !py-2 !px-4 !text-sm">
+          Get started
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- =================== HERO =================== -->
+  <section class="relative px-6 pt-16 pb-24">
+    <div class="relative max-w-7xl mx-auto text-center">
+      <div class="chip mx-auto mb-6">
+        <span class="dot"></span>
+        Built for the AI-era job market
+      </div>
+
+      <h1 class="display text-5xl md:text-7xl max-w-4xl mx-auto">
+        Get hired on what you <span class="gradient-text">can do.</span><br/>
+        Not what you <span class="text-ink-500 italic font-normal">wrote.</span>
+      </h1>
+
+      <p class="mt-6 text-lg md:text-xl text-ink-700 max-w-2xl mx-auto">
+        HireGEN turns proof — projects, skills, validated tests — into your career identity.
+        Companies see only the qualified. You stop applying into the void.
+      </p>
+
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a href="#cta" class="btn-primary">
+          Create your skill profile
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#companies" class="btn-glass">I'm hiring →</a>
+      </div>
+
+      <p class="mt-5 text-xs text-ink-500">Free for candidates. Forever. No résumé spam.</p>
+
+      <!-- Hero preview: stacked glass panels -->
+      <div class="relative mt-16 max-w-5xl mx-auto">
+        <div class="glass-strong p-3 md:p-4">
+          <div class="rounded-2xl p-6 md:p-8 grid md:grid-cols-3 gap-4 text-left">
+            <!-- candidate card -->
+            <div class="glass-soft p-5 relative">
+              <div class="relative z-10 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center font-semibold">PA</div>
+                <div>
+                  <div class="font-semibold text-sm">Priya A.</div>
+                  <div class="text-xs text-ink-500">B.Tech · Hyderabad</div>
+                </div>
+                <span class="ml-auto chip !text-[10px]">92 match</span>
+              </div>
+              <div class="relative z-10 mt-4 grid grid-cols-3 gap-2 text-center">
+                <div class="rounded-lg p-2 bg-white/50 border border-white/60">
+                  <div class="text-[10px] text-ink-500">React</div>
+                  <div class="text-sm font-bold text-brand-700">94</div>
+                </div>
+                <div class="rounded-lg p-2 bg-white/50 border border-white/60">
+                  <div class="text-[10px] text-ink-500">Python</div>
+                  <div class="text-sm font-bold text-brand-700">88</div>
+                </div>
+                <div class="rounded-lg p-2 bg-white/50 border border-white/60">
+                  <div class="text-[10px] text-ink-500">SQL</div>
+                  <div class="text-sm font-bold text-brand-700">81</div>
+                </div>
+              </div>
+              <div class="relative z-10 mt-4 text-[11px] text-ink-500 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                3 verified projects · 2 skill tests
+              </div>
+            </div>
+
+            <!-- match panel -->
+            <div class="glass-soft p-5 relative">
+              <div class="relative z-10">
+                <div class="text-xs font-semibold text-ink-500 uppercase tracking-wider">Matched role</div>
+                <div class="mt-1 font-semibold">Frontend Engineer · Razorpay</div>
+                <div class="text-xs text-ink-500">Remote · ₹18-26 LPA</div>
+                <div class="mt-4 space-y-2">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-ink-700">Skill fit</span>
+                    <span class="font-semibold text-ink-900">94%</span>
+                  </div>
+                  <div class="h-1.5 rounded-full bg-white/60 overflow-hidden border border-white/60">
+                    <div class="h-full w-[94%] bg-gradient-to-r from-brand-500 via-pink-500 to-accent-500 rounded-full"></div>
+                  </div>
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-ink-700">Intent signal</span>
+                    <span class="font-semibold text-ink-900">High</span>
+                  </div>
+                  <div class="h-1.5 rounded-full bg-white/60 overflow-hidden border border-white/60">
+                    <div class="h-full w-[88%] bg-gradient-to-r from-cyan-500 to-brand-500 rounded-full"></div>
+                  </div>
+                </div>
+                <button class="mt-5 w-full btn-primary !py-2 !text-xs !rounded-lg">Request intro</button>
+              </div>
+            </div>
+
+            <!-- AI coach -->
+            <div class="glass-soft p-5 relative">
+              <div class="relative z-10">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-md bg-gradient-to-br from-accent-500 via-pink-500 to-brand-500 flex items-center justify-center text-white">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z"/></svg>
+                  </div>
+                  <div class="text-sm font-semibold">AI Career Coach</div>
+                </div>
+                <p class="mt-3 text-xs text-ink-700 leading-relaxed">
+                  You're 1 verified project from unlocking <span class="font-semibold text-ink-900">Senior</span> roles. Suggested: ship a system-design case study.
+                </p>
+                <div class="mt-3 flex flex-wrap gap-1.5">
+                  <span class="text-[10px] px-2 py-1 rounded-full bg-white/60 border border-white/60 text-ink-700">+12% match</span>
+                  <span class="text-[10px] px-2 py-1 rounded-full bg-white/60 border border-white/60 text-ink-700">~3 hrs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== LOGO STRIP =================== -->
+  <section class="px-6">
+    <div class="max-w-7xl mx-auto glass-soft py-8">
+      <p class="relative z-10 text-center text-xs font-semibold tracking-widest text-ink-500 uppercase">Trusted by hiring teams across India</p>
+      <div class="relative z-10 mt-6 overflow-hidden">
+        <div class="flex gap-12 marquee-track w-max">
+          <span class="text-ink-500/60 font-bold text-2xl tracking-tight">Razorpay</span>
+          <span class="text-ink-500/60 font-bold text-2xl tracking-tight">Zerodha</span>
+          <span class="text-ink-500/60 font-bold text-2xl tracking-tight">Postman</span>
+          <span class="text-ink-500/60 font-bold text-2xl tracking-tight">Cred</span>
+          <span class="text-ink-500/60 font-bold text-2xl tracking-tight">Freshworks</span>
+          <span class="text-ink-500/60 font-bold text-2xl tracking-tight">Zoho</span>
+          <span class="text-ink-500/60 font-bold text-2xl tracking-tight">Razorpay</span>
+          <span class="text-ink-500/60 font-bold text-2xl tracking-tight">Zerodha</span>
+          <span class="text-ink-500/60 font-bold text-2xl tracking-tight">Postman</span>
+          <span class="text-ink-500/60 font-bold text-2xl tracking-tight">Cred</span>
+          <span class="text-ink-500/60 font-bold text-2xl tracking-tight">Freshworks</span>
+          <span class="text-ink-500/60 font-bold text-2xl tracking-tight">Zoho</span>
+        </div>
+      </div>
+      <p class="relative z-10 text-center text-[11px] text-ink-500/70 mt-3 italic">Logos shown are illustrative of target customer profile.</p>
+    </div>
+  </section>
+
+  <!-- =================== PROBLEM =================== -->
+  <section class="max-w-7xl mx-auto px-6 py-24">
+    <div class="grid md:grid-cols-2 gap-12 items-center">
+      <div>
+        <div class="chip mb-4">The hiring problem</div>
+        <h2 class="display text-4xl md:text-5xl">
+          Resumes lie. <br/>
+          <span class="text-ink-500 italic font-normal">Networks gate-keep.</span>
+        </h2>
+        <p class="mt-5 text-ink-700 leading-relaxed">
+          India ships 1.5M engineering graduates a year. Companies still rely on
+          paper credentials and warm intros to find them — leaving Tier-2/3 talent
+          invisible and recruiters drowning in 500-applicant queues.
+        </p>
+        <p class="mt-4 text-ink-700 leading-relaxed">
+          HireGEN flips this: <span class="font-semibold text-ink-900">candidates prove skills, companies see only the qualified.</span>
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="glass p-5"><div class="relative z-10"><div class="display text-4xl text-brand-700">73%</div><p class="text-xs text-ink-500 mt-2">of resumes contain unverifiable claims</p></div></div>
+        <div class="glass p-5"><div class="relative z-10"><div class="display text-4xl text-brand-700">42d</div><p class="text-xs text-ink-500 mt-2">average tech hire timeline in India</p></div></div>
+        <div class="glass p-5"><div class="relative z-10"><div class="display text-4xl text-brand-700">8%</div><p class="text-xs text-ink-500 mt-2">of Tier-3 grads reach Tier-1 interviews</p></div></div>
+        <div class="glass p-5"><div class="relative z-10"><div class="display text-4xl text-brand-700">100+</div><p class="text-xs text-ink-500 mt-2">apps per candidate per role search</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== HOW IT WORKS =================== -->
+  <section id="how" class="py-24 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center max-w-2xl mx-auto">
+        <div class="chip mb-4 mx-auto">How it works</div>
+        <h2 class="display text-4xl md:text-5xl">
+          Four steps. <span class="gradient-text">Zero spray-and-pray.</span>
+        </h2>
+      </div>
+
+      <div class="mt-14 grid md:grid-cols-4 gap-5">
+        <div class="glass p-6"><div class="relative z-10">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center font-bold">1</div>
+          <h3 class="mt-4 font-semibold text-lg">Build a proof profile</h3>
+          <p class="mt-2 text-sm text-ink-500 leading-relaxed">AI parses your projects, GitHub, work history into a structured skill graph.</p>
+        </div></div>
+        <div class="glass p-6"><div class="relative z-10">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-brand-500 text-white flex items-center justify-center font-bold">2</div>
+          <h3 class="mt-4 font-semibold text-lg">Validate with short tests</h3>
+          <p class="mt-2 text-sm text-ink-500 leading-relaxed">15-min adaptive challenges. No multi-day take-homes. Each skill gets a confidence score.</p>
+        </div></div>
+        <div class="glass p-6"><div class="relative z-10">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-brand-500 text-white flex items-center justify-center font-bold">3</div>
+          <h3 class="mt-4 font-semibold text-lg">Get matched, not listed</h3>
+          <p class="mt-2 text-sm text-ink-500 leading-relaxed">Roles surface to you only when there's real fit. You opt-in per intro.</p>
+        </div></div>
+        <div class="glass p-6"><div class="relative z-10">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-500 to-pink-500 text-white flex items-center justify-center font-bold">4</div>
+          <h3 class="mt-4 font-semibold text-lg">Close the loop</h3>
+          <p class="mt-2 text-sm text-ink-500 leading-relaxed">AI coach shows the exact next skill, project, or cert to unlock the role you want.</p>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== FEATURES =================== -->
+  <section id="features" class="max-w-7xl mx-auto px-6 py-24">
+    <div class="text-center max-w-2xl mx-auto">
+      <div class="chip mb-4 mx-auto">The product</div>
+      <h2 class="display text-4xl md:text-5xl">
+        Built different. <span class="text-ink-500 italic font-normal">From the ground up.</span>
+      </h2>
+    </div>
+
+    <div class="mt-14 grid md:grid-cols-3 gap-5">
+      <div class="glass p-6"><div class="relative z-10">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-cyan-500 text-white flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+        </div>
+        <h3 class="mt-4 font-semibold text-lg">Skill graph, not keywords</h3>
+        <p class="mt-2 text-sm text-ink-500 leading-relaxed">Every skill is scored, dated, and proof-linked. ATS keyword stuffing dies here.</p>
+      </div></div>
+      <div class="glass p-6"><div class="relative z-10">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-brand-500 text-white flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zM12 7v5l3 3"/></svg>
+        </div>
+        <h3 class="mt-4 font-semibold text-lg">Intent-based matching</h3>
+        <p class="mt-2 text-sm text-ink-500 leading-relaxed">Recruiters see who's actively looking, salary expectations upfront. No more cold-reach roulette.</p>
+      </div></div>
+      <div class="glass p-6"><div class="relative z-10">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-500 to-pink-500 text-white flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z"/></svg>
+        </div>
+        <h3 class="mt-4 font-semibold text-lg">AI career copilot</h3>
+        <p class="mt-2 text-sm text-ink-500 leading-relaxed">Personalized skill-gap analysis. Knows what to learn next based on the roles you want.</p>
+      </div></div>
+      <div class="glass p-6"><div class="relative z-10">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-brand-500 text-white flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
+        </div>
+        <h3 class="mt-4 font-semibold text-lg">Tier-agnostic discovery</h3>
+        <p class="mt-2 text-sm text-ink-500 leading-relaxed">Talent surfaces by proof, not pedigree. Tier-2/3 grads compete on real ground.</p>
+      </div></div>
+      <div class="glass p-6"><div class="relative z-10">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-pink-500 text-white flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3 class="mt-4 font-semibold text-lg">Verifiable, portable</h3>
+        <p class="mt-2 text-sm text-ink-500 leading-relaxed">Your proof profile is yours. Export anywhere — including back to LinkedIn.</p>
+      </div></div>
+      <div class="glass p-6"><div class="relative z-10">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-500 to-brand-500 text-white flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
+        </div>
+        <h3 class="mt-4 font-semibold text-lg">Outcome dashboards</h3>
+        <p class="mt-2 text-sm text-ink-500 leading-relaxed">Companies see time-to-hire, fit-score, retention. Real metrics, not vanity counts.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- =================== SPLIT =================== -->
+  <section class="py-24 px-6">
+    <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-6">
+      <!-- For Companies -->
+      <div id="companies" class="glass-strong p-8 md:p-10 relative">
+        <div class="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-brand-500 opacity-30 blur-3xl"></div>
+        <div class="relative z-10">
+          <div class="chip mb-4">For Companies</div>
+          <h3 class="display text-3xl md:text-4xl">Hire faster. With proof.</h3>
+          <p class="mt-3 text-ink-700">Stop sifting through 500 résumés. See only the qualified, ranked by real signal.</p>
+          <ul class="mt-6 space-y-3 text-sm">
+            <li class="flex items-start gap-3"><span class="mt-1 w-5 h-5 rounded-md bg-brand-500 text-white flex items-center justify-center"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><div><span class="font-semibold">Skill-validated shortlist.</span> Top 10 candidates per role, not top 1000.</div></li>
+            <li class="flex items-start gap-3"><span class="mt-1 w-5 h-5 rounded-md bg-brand-500 text-white flex items-center justify-center"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><div><span class="font-semibold">Pay only on accepted intros.</span> Aligned incentives, not subscriptions.</div></li>
+            <li class="flex items-start gap-3"><span class="mt-1 w-5 h-5 rounded-md bg-brand-500 text-white flex items-center justify-center"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><div><span class="font-semibold">Access Tier-2/3 talent.</span> 4x larger qualified pool than LinkedIn for India tech.</div></li>
+          </ul>
+          <a href="#cta" class="btn-primary mt-8 !py-2.5 !px-5 !text-sm">Start hiring →</a>
+        </div>
+      </div>
+
+      <!-- For Candidates -->
+      <div id="candidates" class="glass-strong p-8 md:p-10 relative">
+        <div class="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-accent-500 opacity-40 blur-3xl"></div>
+        <div class="relative z-10">
+          <div class="chip chip-amber mb-4">For Candidates</div>
+          <h3 class="display text-3xl md:text-4xl">Be found. On merit.</h3>
+          <p class="mt-3 text-ink-700">Stop applying to 100 jobs. Get matched when you're qualified.</p>
+          <ul class="mt-6 space-y-3 text-sm">
+            <li class="flex items-start gap-3"><span class="mt-1 w-5 h-5 rounded-md bg-accent-500 text-white flex items-center justify-center"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><div><span class="font-semibold">Free. Forever.</span> No premium tiers, no résumé spam upsells.</div></li>
+            <li class="flex items-start gap-3"><span class="mt-1 w-5 h-5 rounded-md bg-accent-500 text-white flex items-center justify-center"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><div><span class="font-semibold">AI coach.</span> Learn exactly what to build next to unlock your dream role.</div></li>
+            <li class="flex items-start gap-3"><span class="mt-1 w-5 h-5 rounded-md bg-accent-500 text-white flex items-center justify-center"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><div><span class="font-semibold">No social noise.</span> No feed, no influencers, no humble-brags. Just career.</div></li>
+          </ul>
+          <a href="#cta" class="btn-accent mt-8">Create profile →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== TESTIMONIAL =================== -->
+  <section class="max-w-5xl mx-auto px-6 py-24">
+    <div class="glass-strong p-10 md:p-14 text-center relative">
+      <div class="absolute inset-0 -m-10 blur-3xl opacity-40 pointer-events-none">
+        <div class="w-1/2 h-1/2 bg-brand-500 rounded-full absolute top-0 left-0"></div>
+        <div class="w-1/2 h-1/2 bg-accent-500 rounded-full absolute bottom-0 right-0"></div>
+      </div>
+      <div class="relative z-10">
+        <svg class="w-10 h-10 mx-auto text-brand-500/50" viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h4v4H7c0 3 2 5 5 5v2c-5 0-8-3-8-7V7zM15 7h4v4h-4c0 3 2 5 5 5v2c-5 0-8-3-8-7V7z"/></svg>
+        <p class="mt-6 display text-2xl md:text-3xl leading-snug">
+          "We cut tech hiring from <span class="gradient-text">42 days to 11.</span>
+          Quality went up, not down. Half our last cohort came from cities we'd never recruited from before."
+        </p>
+        <div class="mt-6 text-sm text-ink-500">— Talent lead, Bangalore-based fintech (pilot customer)</div>
+        <p class="mt-1 text-[11px] text-ink-500/70 italic">Illustrative pilot scenario — public pilots launch Q3 2026.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== CTA =================== -->
+  <section id="cta" class="px-6 pb-24">
+    <div class="relative max-w-5xl mx-auto glass-dark p-12 md:p-16 text-center overflow-hidden">
+      <div class="absolute inset-0 pointer-events-none">
+        <div class="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-brand-500 opacity-60 blur-3xl"></div>
+        <div class="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-accent-500 opacity-60 blur-3xl"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-pink-500 opacity-30 blur-3xl"></div>
+      </div>
+      <div class="relative z-10">
+        <h2 class="display text-4xl md:text-5xl">
+          The fastest path from <span class="gradient-text">skill → job.</span>
+        </h2>
+        <p class="mt-4 text-white/85 max-w-xl mx-auto">
+          Join the early beta. Build your skill profile in under 10 minutes.
+        </p>
+        <form class="mt-8 max-w-md mx-auto flex flex-col sm:flex-row gap-2">
+          <input type="email" placeholder="you@work.email" class="flex-1 bg-white/90 backdrop-blur text-ink-900 placeholder:text-ink-500 px-4 py-3 rounded-xl border border-white/40 focus:outline-none focus:ring-2 focus:ring-white" />
+          <button type="button" class="btn-glass !text-ink-900">Get early access</button>
+        </form>
+        <p class="mt-3 text-xs text-white/70">No spam. We'll email when your invite is ready.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== FAQ =================== -->
+  <section id="faq" class="max-w-3xl mx-auto px-6 pb-24">
+    <div class="text-center">
+      <div class="chip mx-auto mb-4">FAQ</div>
+      <h2 class="display text-4xl">Questions, answered.</h2>
+    </div>
+    <div class="mt-10 space-y-3">
+      <details class="glass p-5 group">
+        <summary class="relative z-10 flex items-center justify-between cursor-pointer font-semibold">
+          Is this a LinkedIn replacement?
+          <span class="text-ink-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="relative z-10 mt-3 text-sm text-ink-700 leading-relaxed">No. LinkedIn is your network of record. HireGEN is your <em>proof of capability</em>. Keep both — we even let you sync.</p>
+      </details>
+      <details class="glass p-5 group">
+        <summary class="relative z-10 flex items-center justify-between cursor-pointer font-semibold">
+          How do you verify skills?
+          <span class="text-ink-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="relative z-10 mt-3 text-sm text-ink-700 leading-relaxed">Adaptive 15-min challenges, project review by AI + peer signal, and verified contributions from open-source / repos. Each skill carries a confidence score and decay date.</p>
+      </details>
+      <details class="glass p-5 group">
+        <summary class="relative z-10 flex items-center justify-between cursor-pointer font-semibold">
+          What does it cost?
+          <span class="text-ink-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="relative z-10 mt-3 text-sm text-ink-700 leading-relaxed">Free for candidates, forever. Companies pay per accepted intro (₹2k–₹10k) or via enterprise plans. No résumé database resale, ever.</p>
+      </details>
+      <details class="glass p-5 group">
+        <summary class="relative z-10 flex items-center justify-between cursor-pointer font-semibold">
+          When is it launching?
+          <span class="text-ink-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="relative z-10 mt-3 text-sm text-ink-700 leading-relaxed">Closed beta — Q3 2026. Public launch — late 2026. Join the waitlist above to be in the first cohort.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- =================== FOOTER =================== -->
+  <footer class="px-6 pb-6">
+    <div class="max-w-7xl mx-auto glass p-10 md:p-12">
+      <div class="relative z-10 grid md:grid-cols-4 gap-8 text-sm">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 via-pink-500 to-accent-500 flex items-center justify-center text-white font-bold">H</div>
+            <span class="display text-lg">HireGEN</span>
+          </div>
+          <p class="mt-3 text-ink-500 max-w-xs">The fastest path from skill to job. India-first. AI-native.</p>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-ink-900 uppercase tracking-wider">Product</div>
+          <ul class="mt-3 space-y-2 text-ink-500">
+            <li><a href="#" class="hover:text-ink-900">For Candidates</a></li>
+            <li><a href="#" class="hover:text-ink-900">For Companies</a></li>
+            <li><a href="#" class="hover:text-ink-900">Skill Library</a></li>
+            <li><a href="#" class="hover:text-ink-900">Pricing</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-ink-900 uppercase tracking-wider">Company</div>
+          <ul class="mt-3 space-y-2 text-ink-500">
+            <li><a href="#" class="hover:text-ink-900">About</a></li>
+            <li><a href="#" class="hover:text-ink-900">Blog</a></li>
+            <li><a href="#" class="hover:text-ink-900">Careers</a></li>
+            <li><a href="#" class="hover:text-ink-900">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-ink-900 uppercase tracking-wider">Legal</div>
+          <ul class="mt-3 space-y-2 text-ink-500">
+            <li><a href="#" class="hover:text-ink-900">Privacy</a></li>
+            <li><a href="#" class="hover:text-ink-900">Terms</a></li>
+            <li><a href="#" class="hover:text-ink-900">DPDP Compliance</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="relative z-10 mt-8 pt-6 border-t border-white/40 flex flex-col md:flex-row items-center justify-between text-xs text-ink-500">
+        <div>© 2026 HireGEN. Made in India.</div>
+        <div class="mt-2 md:mt-0">v0.2 · Liquid Glass mockup</div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
