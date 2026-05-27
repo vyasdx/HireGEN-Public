@@ -5,6 +5,7 @@ export type SampleAudience = "students" | "employees" | "recruiters";
 export type StressSample = BuilderInput & {
   id: string;
   candidate_type: string;
+  profile_type: string;
   audience: SampleAudience[];
   title: string;
   what_it_tests: string;
@@ -16,16 +17,17 @@ export const stressSamples: StressSample[] = [
     id: "HG-ST-001",
     title: "Student web projects baseline",
     candidate_type: "Student",
+    profile_type: "Student",
     audience: ["students"],
     what_it_tests: "Whether baseline mode rewards coursework, internships, SQL, and practical projects without inventing senior experience.",
     expected_signal: "React, Node.js, SQL, Git, project proof gaps",
     analysis_mode: "baseline_profile",
-    name: "Aarav Student",
+    name: "Aarav",
     target_role: "",
     target_job_description: "",
     github_url: "",
     project_links: [],
-    resume_text: `Aarav Student
+    resume_text: `Aarav
 Bengaluru, India
 Education: B.Tech Computer Science, 2026
 Summary: Final-year student with coursework in data structures, web development, databases, and operating systems.
@@ -40,17 +42,18 @@ Internship: Two-month frontend intern, fixed UI bugs and wrote component tests.`
     id: "HG-ST-002",
     title: "Junior backend target match",
     candidate_type: "Employee",
+    profile_type: "Employee",
     audience: ["employees", "recruiters"],
     what_it_tests: "Whether target-role mode maps Node.js, REST APIs, PostgreSQL, testing, Docker basics, and gaps against a backend JD.",
     expected_signal: "REST APIs, PostgreSQL, Docker, CI/CD gap",
     analysis_mode: "target_gap",
-    name: "Meera Backend",
+    name: "Meera",
     target_role: "Backend Engineer",
     target_job_description:
       "We need a Backend Engineer with Node.js or Python, REST APIs, PostgreSQL, Redis, Docker, testing, CI/CD, and cloud deployment experience.",
     github_url: "https://github.com/octocat",
     project_links: ["https://github.com/octocat/Hello-World"],
-    resume_text: `Meera Backend
+    resume_text: `Meera
 Hyderabad, India
 Education: B.E Information Science, 2022
 Experience: 2 years as Software Engineer at a SaaS startup.
@@ -66,16 +69,17 @@ Skills: Node.js, Express, REST APIs, PostgreSQL, JavaScript, Git, Docker basics,
     id: "HG-ST-003",
     title: "Senior infrastructure baseline",
     candidate_type: "Employee",
+    profile_type: "Employee",
     audience: ["employees"],
     what_it_tests: "Whether resume-first extraction captures enterprise infrastructure depth, certifications, and operations leadership.",
     expected_signal: "AIX, SUSE, PowerHA, Pacemaker, Azure, RCA",
     analysis_mode: "baseline_profile",
-    name: "Suresh Infrastructure",
+    name: "Suresh",
     target_role: "",
     target_job_description: "",
     github_url: "",
     project_links: [],
-    resume_text: `Suresh Infrastructure
+    resume_text: `Suresh
 Pune, India
 Summary: Senior infrastructure specialist with 13 years in UNIX, Linux, and enterprise operations.
 Current Role: Senior Lead Infrastructure Engineer.
@@ -91,17 +95,18 @@ Skills: AIX, SUSE Linux, PowerHA, Pacemaker, GPFS, Azure, RCA, health checks, in
     id: "HG-ST-004",
     title: "Ops to Senior AI Systems transition",
     candidate_type: "Career transition",
+    profile_type: "Career transition",
     audience: ["employees", "recruiters"],
     what_it_tests: "Whether strong ops evidence is treated as transferable but high-priority AI gaps reduce the score.",
     expected_signal: "Direct ops match, logical transfer, Python/ML/RAG/agentic gaps",
     analysis_mode: "target_gap",
-    name: "Devika AIOps Transition",
+    name: "Devika",
     target_role: "Senior AI Systems Engineer",
     target_job_description:
       "Design and deploy AI-driven operational intelligence systems. Required skills: Python, machine learning, statistics, anomaly detection, RAG over runbooks, agentic workflows, embeddings, vector stores, APIs, Docker, Kubernetes, observability, drift monitoring, and human-in-the-loop guardrails. Preferred: AIOps, SRE, incident systems, SAP HANA, SAP BTP, ITIL.",
     github_url: "",
     project_links: [],
-    resume_text: `Devika AIOps Transition
+    resume_text: `Devika
 Bangalore, India
 Summary: 14 years of enterprise operations experience across AIX, Linux, Azure, SAP migrations, high-availability clusters, incident response, and RCA.
 Experience:
@@ -116,17 +121,18 @@ Skills: AIX, SUSE Linux, Azure, SAP HANA operations, Pacemaker, RCA, incident ma
     id: "HG-ST-005",
     title: "Fresher data analyst target",
     candidate_type: "Student",
+    profile_type: "Student",
     audience: ["students", "recruiters"],
     what_it_tests: "Whether student analytics projects, internship reporting, SQL, Excel, and Python basics are scored realistically.",
     expected_signal: "SQL, Excel, Python basics, dashboarding gap",
     analysis_mode: "target_gap",
-    name: "Nisha Analyst",
+    name: "Nisha",
     target_role: "Data Analyst",
     target_job_description:
       "Looking for Data Analyst with SQL, Excel, Python or R, dashboarding, business metrics, data cleaning, storytelling, and stakeholder communication.",
     github_url: "",
     project_links: [],
-    resume_text: `Nisha Analyst
+    resume_text: `Nisha
 Chennai, India
 Education: B.Sc Statistics, 2025
 Projects:
@@ -140,17 +146,18 @@ Skills: SQL, Excel, Python basics, pandas, statistics, presentation, data cleani
     id: "HG-ST-006",
     title: "Business analyst product fit",
     candidate_type: "Employee",
+    profile_type: "Employee",
     audience: ["employees", "recruiters"],
     what_it_tests: "Whether non-code corporate experience is evaluated without forcing engineering-only proof.",
     expected_signal: "Requirements, stakeholder interviews, user stories, SQL basics",
     analysis_mode: "target_gap",
-    name: "Rahul Business",
+    name: "Rahul",
     target_role: "Product Business Analyst",
     target_job_description:
       "Role requires requirements gathering, stakeholder interviews, user stories, process mapping, acceptance criteria, SQL basics, dashboards, Agile ceremonies, and clear communication.",
     github_url: "",
     project_links: [],
-    resume_text: `Rahul Business
+    resume_text: `Rahul
 Noida, India
 Experience: 6 years as Business Analyst in retail and logistics domains.
 Work:
@@ -164,17 +171,18 @@ Skills: Business analysis, stakeholder management, user stories, process improve
     id: "HG-ST-007",
     title: "QA automation to SDET",
     candidate_type: "Employee",
+    profile_type: "Employee",
     audience: ["employees", "recruiters"],
     what_it_tests: "Whether automation testing is mapped to SDET requirements and modern framework gaps are exposed.",
     expected_signal: "Selenium, API testing, defect triage, Playwright/CI gap",
     analysis_mode: "target_gap",
-    name: "Pooja QA",
+    name: "Pooja",
     target_role: "SDET",
     target_job_description:
       "SDET role requiring test automation, Playwright or Selenium, API testing, CI/CD, JavaScript or Java, test strategy, defect triage, and reliability mindset.",
     github_url: "",
     project_links: [],
-    resume_text: `Pooja QA
+    resume_text: `Pooja
 Kochi, India
 Experience: 4 years in manual and automation testing.
 Work:
@@ -188,17 +196,18 @@ Skills: Selenium, Java, Postman, REST API testing, test cases, regression, defec
     id: "HG-ST-008",
     title: "Cloud DevOps target match",
     candidate_type: "Employee",
+    profile_type: "Employee",
     audience: ["employees", "recruiters"],
     what_it_tests: "Whether DevOps evidence is matched to Linux, Azure, Docker, Kubernetes, Terraform, CI/CD, and monitoring.",
     expected_signal: "Azure, Linux, Docker, Kubernetes, Terraform, monitoring",
     analysis_mode: "target_gap",
-    name: "Imran DevOps",
+    name: "Imran",
     target_role: "Cloud DevOps Engineer",
     target_job_description:
       "Cloud DevOps Engineer with AWS or Azure, Linux, Docker, Kubernetes, Terraform, CI/CD, monitoring, incident response, and security remediation.",
     github_url: "",
     project_links: [],
-    resume_text: `Imran DevOps
+    resume_text: `Imran
 Mumbai, India
 Experience: 5 years in Linux administration and cloud operations.
 Work:
@@ -213,17 +222,18 @@ Skills: Azure, Linux, Docker, Kubernetes, Terraform, GitHub Actions, Prometheus,
     id: "HG-ST-009",
     title: "Weak noisy backend applicant",
     candidate_type: "Student",
+    profile_type: "Student",
     audience: ["students", "recruiters"],
     what_it_tests: "Whether the system stays honest when the resume has weak evidence and no GitHub proof.",
     expected_signal: "Low score, high gaps, no invented backend expertise",
     analysis_mode: "target_gap",
-    name: "Kiran Noisy",
+    name: "Kiran",
     target_role: "Backend Engineer",
     target_job_description:
       "Backend Engineer requiring REST APIs, databases, backend language expertise, testing, deployment, and production debugging.",
     github_url: "",
     project_links: [],
-    resume_text: `Kiran Noisy
+    resume_text: `Kiran
 India
 Summary: Hardworking and passionate about technology. Looking for good opportunity.
 Education: BCA, 2024
@@ -236,17 +246,18 @@ Certifications: Completed online computer basics course.`,
     id: "HG-ST-010",
     title: "ML researcher target match",
     candidate_type: "Student",
+    profile_type: "Student",
     audience: ["students", "recruiters"],
     what_it_tests: "Whether ML academic proof is separated from missing MLOps and production deployment proof.",
     expected_signal: "Python, statistics, model evaluation, MLOps/cloud gaps",
     analysis_mode: "target_gap",
-    name: "Ananya Research",
+    name: "Ananya",
     target_role: "Machine Learning Engineer",
     target_job_description:
       "Machine Learning Engineer with Python, statistics, ML models, model evaluation, MLOps, APIs, cloud deployment, experiment tracking, and production monitoring.",
     github_url: "",
     project_links: [],
-    resume_text: `Ananya Research
+    resume_text: `Ananya
 Delhi, India
 Education: M.Tech Data Science, 2024
 Research:

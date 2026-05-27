@@ -99,6 +99,10 @@ export function SampleProfileLab({ samples }: { samples: StressSample[] }) {
                 <dd className="mt-1 font-semibold text-ink-900">{sample.name}</dd>
               </div>
               <div>
+                <dt className="text-[10px] uppercase tracking-wider text-ink-500">Profile type</dt>
+                <dd className="mt-1 text-ink-700">{sample.profile_type}</dd>
+              </div>
+              <div>
                 <dt className="text-[10px] uppercase tracking-wider text-ink-500">Target</dt>
                 <dd className="mt-1 text-ink-700">{sample.target_role || "Current profile baseline"}</dd>
               </div>

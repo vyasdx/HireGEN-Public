@@ -4,13 +4,13 @@ export const stressFixtures = [
     source: "synthetic-json-resume-inspired",
     candidateType: "student",
     mode: "baseline_profile",
-    name: "Aarav Student",
+    name: "Aarav",
     target_role: "",
     target_job_description: "",
     github_url: "",
     project_links: [],
     resume_text: `
-Aarav Student
+Aarav
 Bengaluru, India
 Education: B.Tech Computer Science, 2026
 Summary: Final-year student with coursework in data structures, web development, databases, and operating systems.
@@ -33,7 +33,7 @@ Internship: Two-month frontend intern, fixed UI bugs and wrote component tests.
     source: "synthetic-json-resume-inspired",
     candidateType: "junior-developer",
     mode: "target_gap",
-    name: "Meera Backend",
+    name: "Meera",
     target_role: "Backend Engineer",
     target_job_description: `
 We need a Backend Engineer with Node.js or Python, REST APIs, PostgreSQL, Redis, Docker, testing, CI/CD, and cloud deployment experience.
@@ -41,7 +41,7 @@ We need a Backend Engineer with Node.js or Python, REST APIs, PostgreSQL, Redis,
     github_url: "https://github.com/octocat",
     project_links: ["https://github.com/octocat/Hello-World"],
     resume_text: `
-Meera Backend
+Meera
 Hyderabad, India
 Education: B.E Information Science, 2022
 Experience: 2 years as Software Engineer at a SaaS startup.
@@ -66,13 +66,13 @@ Skills: Node.js, Express, REST APIs, PostgreSQL, JavaScript, Git, Docker basics,
     source: "synthetic-json-resume-inspired",
     candidateType: "senior-employee",
     mode: "baseline_profile",
-    name: "Suresh Infrastructure",
+    name: "Suresh",
     target_role: "",
     target_job_description: "",
     github_url: "",
     project_links: [],
     resume_text: `
-Suresh Infrastructure
+Suresh
 Pune, India
 Summary: Senior infrastructure specialist with 13 years in UNIX, Linux, and enterprise operations.
 Current Role: Senior Lead Infrastructure Engineer.
@@ -99,7 +99,7 @@ Skills: AIX, SUSE Linux, PowerHA, Pacemaker, GPFS, Azure, RCA, health checks, in
     source: "synthetic-json-resume-inspired",
     candidateType: "career-transition",
     mode: "target_gap",
-    name: "Devika AIOps Transition",
+    name: "Devika",
     target_role: "Senior AI Systems Engineer",
     target_job_description: `
 Design and deploy AI-driven operational intelligence systems. Required skills: Python, machine learning, statistics, anomaly detection, RAG over runbooks, agentic workflows, embeddings, vector stores, APIs, Docker, Kubernetes, observability, drift monitoring, and human-in-the-loop guardrails. Preferred: AIOps, SRE, incident systems, SAP HANA, SAP BTP, ITIL.
@@ -107,7 +107,7 @@ Design and deploy AI-driven operational intelligence systems. Required skills: P
     github_url: "",
     project_links: [],
     resume_text: `
-Devika AIOps Transition
+Devika
 Bangalore, India
 Summary: 14 years of enterprise operations experience across AIX, Linux, Azure, SAP migrations, high-availability clusters, incident response, and RCA.
 Experience:
@@ -131,7 +131,7 @@ Skills: AIX, SUSE Linux, Azure, SAP HANA operations, Pacemaker, RCA, incident ma
     source: "synthetic-json-resume-inspired",
     candidateType: "fresher",
     mode: "target_gap",
-    name: "Nisha Analyst",
+    name: "Nisha",
     target_role: "Data Analyst",
     target_job_description: `
 Looking for Data Analyst with SQL, Excel, Python or R, dashboarding, business metrics, data cleaning, storytelling, and stakeholder communication.
@@ -139,7 +139,7 @@ Looking for Data Analyst with SQL, Excel, Python or R, dashboarding, business me
     github_url: "",
     project_links: [],
     resume_text: `
-Nisha Analyst
+Nisha
 Chennai, India
 Education: B.Sc Statistics, 2025
 Projects:
@@ -161,7 +161,7 @@ Skills: SQL, Excel, Python basics, pandas, statistics, presentation, data cleani
     source: "synthetic-json-resume-inspired",
     candidateType: "business-analyst",
     mode: "target_gap",
-    name: "Rahul Business",
+    name: "Rahul",
     target_role: "Product Business Analyst",
     target_job_description: `
 Role requires requirements gathering, stakeholder interviews, user stories, process mapping, acceptance criteria, SQL basics, dashboards, Agile ceremonies, and clear communication.
@@ -169,7 +169,7 @@ Role requires requirements gathering, stakeholder interviews, user stories, proc
     github_url: "",
     project_links: [],
     resume_text: `
-Rahul Business
+Rahul
 Noida, India
 Experience: 6 years as Business Analyst in retail and logistics domains.
 Work:
@@ -191,7 +191,7 @@ Skills: Business analysis, stakeholder management, user stories, process improve
     source: "synthetic-json-resume-inspired",
     candidateType: "qa-automation",
     mode: "target_gap",
-    name: "Pooja QA",
+    name: "Pooja",
     target_role: "SDET",
     target_job_description: `
 SDET role requiring test automation, Playwright or Selenium, API testing, CI/CD, JavaScript or Java, test strategy, defect triage, and reliability mindset.
@@ -199,7 +199,7 @@ SDET role requiring test automation, Playwright or Selenium, API testing, CI/CD,
     github_url: "",
     project_links: [],
     resume_text: `
-Pooja QA
+Pooja
 Kochi, India
 Experience: 4 years in manual and automation testing.
 Work:
@@ -221,7 +221,7 @@ Skills: Selenium, Java, Postman, REST API testing, test cases, regression, defec
     source: "synthetic-json-resume-inspired",
     candidateType: "cloud-devops",
     mode: "target_gap",
-    name: "Imran DevOps",
+    name: "Imran",
     target_role: "Cloud DevOps Engineer",
     target_job_description: `
 Cloud DevOps Engineer with AWS or Azure, Linux, Docker, Kubernetes, Terraform, CI/CD, monitoring, incident response, and security remediation.
@@ -229,7 +229,7 @@ Cloud DevOps Engineer with AWS or Azure, Linux, Docker, Kubernetes, Terraform, C
     github_url: "",
     project_links: [],
     resume_text: `
-Imran DevOps
+Imran
 Mumbai, India
 Experience: 5 years in Linux administration and cloud operations.
 Work:
@@ -252,7 +252,7 @@ Skills: Azure, Linux, Docker, Kubernetes, Terraform, GitHub Actions, Prometheus,
     source: "synthetic-json-resume-inspired",
     candidateType: "weak-noisy",
     mode: "target_gap",
-    name: "Kiran Noisy",
+    name: "Kiran",
     target_role: "Backend Engineer",
     target_job_description: `
 Backend Engineer requiring REST APIs, databases, backend language expertise, testing, deployment, and production debugging.
@@ -260,7 +260,7 @@ Backend Engineer requiring REST APIs, databases, backend language expertise, tes
     github_url: "",
     project_links: [],
     resume_text: `
-Kiran Noisy
+Kiran
 India
 Summary: Hardworking and passionate about technology. Looking for good opportunity.
 Education: BCA, 2024
@@ -282,7 +282,7 @@ Certifications: Completed online computer basics course.
     source: "synthetic-json-resume-inspired",
     candidateType: "researcher",
     mode: "target_gap",
-    name: "Ananya Research",
+    name: "Ananya",
     target_role: "Machine Learning Engineer",
     target_job_description: `
 Machine Learning Engineer with Python, statistics, ML models, model evaluation, MLOps, APIs, cloud deployment, experiment tracking, and production monitoring.
@@ -290,7 +290,7 @@ Machine Learning Engineer with Python, statistics, ML models, model evaluation, 
     github_url: "",
     project_links: [],
     resume_text: `
-Ananya Research
+Ananya
 Delhi, India
 Education: M.Tech Data Science, 2024
 Research:
