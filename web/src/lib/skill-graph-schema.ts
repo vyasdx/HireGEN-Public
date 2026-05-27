@@ -69,6 +69,10 @@ export const builderInputSchema = z.object({
   resume_text: z.string().trim().min(20).max(12000),
   github_url: z.string().trim().max(180).optional().default(""),
   project_links: z.array(z.string().trim().max(180)).max(8).optional().default([]),
+  product_context: z.string().trim().max(2000).optional().default(""),
+  product_role: z.string().trim().max(1000).optional().default(""),
+  product_users: z.string().trim().max(1000).optional().default(""),
+  private_repo_status: z.enum(["", "none", "available_on_request", "not_available"]).optional().default(""),
 }).superRefine((input, ctx) => {
   if (input.analysis_mode === "target_gap" && input.target_role.trim().length < 3) {
     ctx.addIssue({

@@ -30,6 +30,10 @@ export function BuilderForm() {
       resume_text: String(form.get("resume") ?? ""),
       github_url: String(form.get("github") ?? ""),
       project_links: projectLinks,
+      product_context: String(form.get("product_context") ?? ""),
+      product_role: String(form.get("product_role") ?? ""),
+      product_users: String(form.get("product_users") ?? ""),
+      private_repo_status: String(form.get("private_repo_status") ?? ""),
     };
 
     const response = await fetch("/api/skill-graph", {
@@ -182,6 +186,69 @@ export function BuilderForm() {
         />
       </div>
 
+      <fieldset className="glass-soft p-4 space-y-4">
+        <legend className="text-sm font-semibold text-ink-900">Product proof details</legend>
+        <p className="text-xs text-ink-500">
+          Useful when public GitHub is incomplete, private repos hold real work, or the product is niche.
+        </p>
+
+        <div>
+          <label htmlFor="product_context" className="text-sm font-semibold text-ink-900">
+            Product problem and value
+          </label>
+          <textarea
+            id="product_context"
+            name="product_context"
+            rows={3}
+            placeholder="What problem does the product solve? Who benefits? What value does it create?"
+            className="mt-2 w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40 resize-y"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="product_role" className="text-sm font-semibold text-ink-900">
+            Your role in the product
+          </label>
+          <textarea
+            id="product_role"
+            name="product_role"
+            rows={2}
+            placeholder="What did you build personally? Architecture, frontend, backend, AI, deployment, operations, integrations..."
+            className="mt-2 w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40 resize-y"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="product_users" className="text-sm font-semibold text-ink-900">
+            Users, status, or traction
+          </label>
+          <textarea
+            id="product_users"
+            name="product_users"
+            rows={2}
+            placeholder="Who uses it? Is it live, beta, internal, client-facing, demo, or early traction?"
+            className="mt-2 w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40 resize-y"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="private_repo_status" className="text-sm font-semibold text-ink-900">
+            Private repo proof
+          </label>
+          <select
+            id="private_repo_status"
+            name="private_repo_status"
+            className="mt-2 w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+            defaultValue=""
+          >
+            <option value="">Not specified</option>
+            <option value="none">No private repo proof</option>
+            <option value="available_on_request">Private repo or screenshots available on request</option>
+            <option value="not_available">Private repo cannot be shared</option>
+          </select>
+        </div>
+      </fieldset>
+
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
@@ -197,7 +264,7 @@ export function BuilderForm() {
       </button>
 
       <p className="text-center text-xs text-ink-500">
-        Resume is treated as the primary source. GitHub and project links add proof, not a replacement for experience.
+        Resume is the primary source. GitHub, live products, and product notes add proof without replacing experience.
       </p>
     </form>
   );

@@ -32,6 +32,8 @@ type EvidenceSignals = {
     status: number;
     title: string;
     note: string;
+    hasProductLanguage: boolean;
+    valueSignals: string[];
   }>;
 };
 
@@ -87,7 +89,7 @@ async function generateWithOpenAI(input: BuilderInput, evidenceSignals: Evidence
         {
           role: "system",
           content:
-            "You are HireGEN's skill validation engine. Build an honest candidate proof profile from the supplied resume, scanned GitHub signals, live project signals, and optional target role/job description. Resume is the primary source for experience, certifications, current role, enterprise skills, and domain expertise. GitHub/project links are proof signals: explain what repos/projects were found, whether they are well structured, and how the candidate should improve the portfolio if weak. Do not invent employers, degrees, repos, links, certifications, or lab results. Mark uncertain claims as resume evidence. For baseline_profile mode, describe the candidate's current profile and default career path. For target_gap mode, compare against the target role/JD and create a senior transition roadmap that bridges existing domain experience into the target. For AIOps/AI systems roles, avoid generic beginner advice; focus on Python over ops data, time-series anomaly detection, RAG over runbooks/incidents, agentic RCA workflows, observability, evaluation, drift monitoring, cloud deployment, and human-in-loop guardrails.",
+            "You are HireGEN's skill validation engine. Build an honest candidate proof profile from the supplied resume, scanned GitHub signals, live product/project signals, product notes, and optional target role/job description. Resume is the primary source for experience, certifications, current role, enterprise skills, and domain expertise. GitHub, live product links, and private repo status are proof signals with different confidence levels: reachable live products can prove existence and product direction; private repos/screenshots are candidate-supplied until reviewed; public GitHub proves only what is visible. Do not penalize niche products for low popularity. Judge product value by problem clarity, user/workflow clarity, candidate role, live reachability, traction/status, architecture/demo evidence, and supporting proof. Do not invent employers, degrees, repos, links, certifications, users, revenue, ownership, or lab results. Mark uncertain claims as candidate-supplied or pending review. If live product links exist, do not reduce the profile to 'GitHub is weak'; instead explain the product proof packaging needed: architecture note, screenshots/demo, private repo review path, commit evidence, and role/impact notes. For baseline_profile mode, describe the candidate's current profile and default career path. For target_gap mode, compare against the target role/JD and create a senior transition roadmap that bridges existing domain experience into the target. For AIOps/AI systems roles, avoid generic beginner advice; focus on Python over ops data, time-series anomaly detection, RAG over runbooks/incidents, agentic RCA workflows, observability, evaluation, drift monitoring, cloud deployment, and human-in-loop guardrails.",
         },
         {
           role: "user",
@@ -99,6 +101,10 @@ async function generateWithOpenAI(input: BuilderInput, evidenceSignals: Evidence
             resume_text: input.resume_text,
             github_url: input.github_url,
             project_links: input.project_links,
+            product_context: input.product_context,
+            product_role: input.product_role,
+            product_users: input.product_users,
+            private_repo_status: input.private_repo_status,
             evidence_signals: evidenceSignals,
           }),
         },
@@ -189,7 +195,7 @@ function normalizeOpenAIOutput(raw: unknown, input: BuilderInput, evidenceSignal
     });
   }
 
-  ensureEvidenceSignals(graph, evidenceSignals);
+  ensureEvidenceSignals(graph, input, evidenceSignals);
   ensureBaselineProfileQuality(graph, input, evidenceSignals);
   ensureTargetGapQuality(graph, input);
   normalizeScores(graph, input);
@@ -204,11 +210,13 @@ function normalizeOpenAIOutput(raw: unknown, input: BuilderInput, evidenceSignal
   return graph;
 }
 
-function ensureEvidenceSignals(graph: Record<string, unknown>, evidenceSignals: EvidenceSignals): void {
+function ensureEvidenceSignals(graph: Record<string, unknown>, input: BuilderInput, evidenceSignals: EvidenceSignals): void {
   const skills = Array.isArray(graph.skills) ? graph.skills as Array<Record<string, unknown>> : [];
   const badges = Array.isArray(graph.badges) ? graph.badges as Array<Record<string, unknown>> : [];
   const gaps = Array.isArray(graph.gaps) ? graph.gaps as Array<Record<string, unknown>> : [];
   const liveProjects = evidenceSignals.projects.filter((project) => project.reachable);
+  const productProof = buildProductProofSkill(input, evidenceSignals);
+  const hasProductProof = Boolean(productProof);
 
   if (evidenceSignals.github.scanned && evidenceSignals.github.repo_count > 0 && !hasNamedItem(skills, "Git Portfolio")) {
     skills.push({
@@ -242,6 +250,10 @@ function ensureEvidenceSignals(graph: Record<string, unknown>, evidenceSignals: 
     });
   }
 
+  if (productProof && !hasNamedItem(skills, productProof.name)) {
+    skills.push(productProof);
+  }
+
   if (evidenceSignals.github.scanned && !hasNamedItem(badges, "Git Portfolio")) {
     badges.push({
       id: "git-portfolio",
@@ -260,17 +272,46 @@ function ensureEvidenceSignals(graph: Record<string, unknown>, evidenceSignals: 
     });
   }
 
-  if (evidenceSignals.github.quality === "needs_structure" && !hasNamedItem(gaps, "Git portfolio structure")) {
+  if (hasProductProof && !hasNamedItem(badges, "Product Proof")) {
+    badges.push({
+      id: "product-proof",
+      label: "Product Proof",
+      awarded: true,
+      reason: productProofReason(input, evidenceSignals),
+    });
+  }
+
+  if (input.private_repo_status === "available_on_request" && !hasNamedItem(badges, "Private Repo Proof")) {
+    badges.push({
+      id: "private-repo-proof",
+      label: "Private Repo Proof",
+      awarded: false,
+      reason: "Private repo/screenshots available on request; ownership and commits are pending human review.",
+    });
+  }
+
+  if (hasProductProof) {
+    const filteredGaps = gaps.filter((gap) => !/git portfolio|git\/project|project evidence/i.test(String(gap.skill ?? "")));
+    if (!hasNamedItem(filteredGaps, "Product proof packaging")) {
+      filteredGaps.push({
+        skill: "Product proof packaging",
+        severity: input.private_repo_status === "available_on_request" ? "medium" : "high",
+        recommendation: "Add product brief, architecture note, screenshots/demo, user/workflow evidence, and private repo or commit review path.",
+      });
+    }
+    graph.gaps = filteredGaps.slice(0, 5);
+  } else if (evidenceSignals.github.quality === "needs_structure" && !hasNamedItem(gaps, "Git portfolio structure")) {
     gaps.push({
       skill: "Git portfolio structure",
       severity: "medium",
       recommendation: "Improve GitHub with pinned proof repos, complete READMEs, architecture notes, live URLs, and clear project descriptions.",
     });
+    graph.gaps = gaps.slice(0, 5);
   }
 
   graph.skills = skills.sort((a, b) => Number(b.score ?? 0) - Number(a.score ?? 0)).slice(0, 10);
-  graph.badges = badges.slice(0, 8);
-  graph.gaps = gaps.slice(0, 5);
+  graph.badges = prioritizeBadges(badges).slice(0, 8);
+  if (!graph.gaps) graph.gaps = gaps.slice(0, 5);
 }
 
 function ensureBaselineProfileQuality(graph: Record<string, unknown>, input: BuilderInput, evidenceSignals: EvidenceSignals): void {
@@ -340,17 +381,10 @@ function normalizeScores(graph: Record<string, unknown>, input: BuilderInput): v
   const skills = Array.isArray(graph.skills) ? graph.skills as Array<Record<string, unknown>> : [];
   if (!skills.length) return;
 
-  const numericScores = skills
-    .map((skill) => Number(skill.score))
-    .filter((score) => Number.isFinite(score));
-  const maxSkillScore = Math.max(...numericScores);
-
-  if (maxSkillScore > 0 && maxSkillScore <= 10) {
-    for (const skill of skills) {
-      const score = Number(skill.score);
-      if (Number.isFinite(score)) {
-        skill.score = Math.max(0, Math.min(100, Math.round(score * 10)));
-      }
+  for (const skill of skills) {
+    const score = Number(skill.score);
+    if (Number.isFinite(score)) {
+      skill.score = Math.max(0, Math.min(100, Math.round(score <= 10 ? score * 10 : score)));
     }
   }
 
@@ -429,9 +463,11 @@ function buildInfrastructureBaselineGaps(evidenceSignals: EvidenceSignals): Skil
 
   return [
     {
-      skill: "Git/project proof packaging",
+      skill: hasProjects ? "Product proof packaging" : "Git/project proof packaging",
       severity: hasGithub || hasProjects ? "medium" : "high",
-      recommendation: "Improve GitHub/live proof with READMEs, architecture notes, screenshots, ownership, impact, and clear project status.",
+      recommendation: hasProjects
+        ? "Package live product proof with problem, users/workflow, architecture, screenshots/demo, ownership, and private repo review path."
+        : "Improve GitHub/live proof with READMEs, architecture notes, screenshots, ownership, impact, and clear project status.",
     },
     {
       skill: "Infrastructure automation proof",
@@ -497,6 +533,80 @@ function hasNamedItem(items: Array<Record<string, unknown>>, name: string): bool
     const itemName = String(item.name ?? item.label ?? item.skill ?? "").toLowerCase();
     return itemName === name.toLowerCase();
   });
+}
+
+function buildProductProofSkill(input: BuilderInput, evidenceSignals: EvidenceSignals): SkillGraph["skills"][number] | null {
+  const liveProjects = evidenceSignals.projects.filter((project) => project.reachable);
+  const hasProductNotes = Boolean(input.product_context.trim() || input.product_role.trim() || input.product_users.trim());
+  if (!liveProjects.length || !hasProductNotes) return null;
+
+  const valueSignalCount = liveProjects.reduce((sum, project) => sum + project.valueSignals.length + (project.hasProductLanguage ? 1 : 0), 0);
+  const score = Math.max(
+    62,
+    Math.min(
+      86,
+      66 +
+        Math.min(10, liveProjects.length * 4) +
+        (input.product_context.trim() ? 5 : 0) +
+        (input.product_role.trim() ? 5 : 0) +
+        (input.product_users.trim() ? 3 : 0) +
+        Math.min(5, valueSignalCount),
+    ),
+  );
+  const projectTitles = liveProjects.map((project) => project.title || project.url).join(", ");
+
+  return {
+    name: "Product Proof",
+    category: "domain",
+    score,
+    freshness_days: 7,
+    evidence: [
+      {
+        kind: "project",
+        ref: clip(projectTitles, 120),
+        note: "Live product reachable; problem, role, and value are candidate-supplied until supporting proof is reviewed.",
+      },
+    ],
+  };
+}
+
+function productProofReason(input: BuilderInput, evidenceSignals: EvidenceSignals): string {
+  const liveProjects = evidenceSignals.projects.filter((project) => project.reachable);
+  const parts = [
+    `${liveProjects.length} live product link(s) reachable`,
+    input.product_context.trim() ? "problem/value supplied" : "",
+    input.product_role.trim() ? "candidate role supplied" : "",
+    input.product_users.trim() ? "status/users supplied" : "",
+    input.private_repo_status === "available_on_request" ? "private proof pending review" : "",
+  ].filter(Boolean);
+
+  return clip(`${parts.join("; ")}. Niche value is judged by workflow and proof clarity, not popularity.`, 180);
+}
+
+function prioritizeBadges(badges: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
+  const priority = ["Product Proof", "Live Projects", "Private Repo Proof", "Git Portfolio", "Git Verified", "Skill Graph", "Project Builder", "Lab Proof", "Career Bridge"];
+  return [...badges].sort((a, b) => {
+    const aIndex = priority.indexOf(String(a.label ?? ""));
+    const bIndex = priority.indexOf(String(b.label ?? ""));
+    return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex);
+  });
+}
+
+function inferProductValueSignals(html: string): string[] {
+  const signals: string[] = [];
+  const checks: Array<[RegExp, string]> = [
+    [/login|sign in|dashboard|account/i, "user workflow"],
+    [/pricing|plan|subscription|checkout|payment/i, "commercial surface"],
+    [/features|solution|platform|product/i, "product positioning"],
+    [/contact|support|book|demo/i, "customer action"],
+    [/student|employee|candidate|recruiter|teacher|parent|institution|business/i, "audience clarity"],
+  ];
+
+  for (const [pattern, label] of checks) {
+    if (pattern.test(html)) signals.push(label);
+  }
+
+  return signals.slice(0, 5);
 }
 
 async function collectEvidenceSignals(input: BuilderInput): Promise<EvidenceSignals> {
@@ -592,6 +702,8 @@ async function analyzeProjectLink(url: string): Promise<EvidenceSignals["project
       status: response.status,
       title,
       note: response.ok ? `Live project reachable${title ? `: ${title}` : ""}` : `Project returned HTTP ${response.status}`,
+      hasProductLanguage: /product|platform|app|dashboard|login|sign in|pricing|features|workflow|students|users|customers|demo/i.test(html),
+      valueSignals: inferProductValueSignals(html),
     };
   } catch {
     return {
@@ -600,6 +712,8 @@ async function analyzeProjectLink(url: string): Promise<EvidenceSignals["project
       status: 0,
       title: "",
       note: "Could not reach project link during scan",
+      hasProductLanguage: false,
+      valueSignals: [],
     };
   }
 }
@@ -640,19 +754,77 @@ function buildFallbackSkillGraph(input: BuilderInput, evidenceSignals: EvidenceS
   const hasGithub = evidenceSignals.github.scanned && evidenceSignals.github.repo_count > 0;
   const liveProjects = evidenceSignals.projects.filter((project) => project.reachable);
   const hasProjects = liveProjects.length > 0;
+  const productProofSkill = buildProductProofSkill(input, evidenceSignals);
   const skills = buildResumeFirstSkills(resume, target, hasGithub, hasProjects, evidenceSignals);
+  if (productProofSkill && !skills.some((skill) => skill.name === productProofSkill.name)) {
+    skills.push(productProofSkill);
+    skills.sort((a, b) => b.score - a.score);
+    skills.splice(10);
+  }
 
   const average = Math.round(skills.reduce((sum, skill) => sum + skill.score, 0) / skills.length);
-  const matchScore = Math.max(48, Math.min(94, average + (hasGithub ? 2 : 0) + (hasProjects ? 3 : 0)));
+  const matchScore = Math.max(48, Math.min(94, average + (hasGithub ? 2 : 0) + (hasProjects ? 3 : 0) + (productProofSkill ? 2 : 0)));
   const projectRef = input.project_links.find(Boolean) ?? "candidate supplied project notes";
   const currentRole = inferCurrentRole(input.resume_text);
   const certifications = inferCertifications(input.resume_text);
   const modeText = input.analysis_mode === "target_gap" ? `targeting ${targetRole}` : `building a baseline profile from current experience${targetRole !== "Current profile baseline" ? ` around ${targetRole}` : ""}`;
   const strongest = skills.slice(0, 4).map((skill) => skill.name).join(", ");
   const summary = clip(
-    `${input.name} is ${modeText}. HireGEN found ${skills.length} skill signals led by resume experience${hasGithub ? " with scanned GitHub as supplementary proof" : ""}. Strongest evidence appears in ${strongest}.${currentRole ? ` Current role signal: ${currentRole}.` : ""}${certifications.length ? ` Certifications found: ${certifications.slice(0, 2).join(", ")}.` : ""} ${evidenceSignals.github.summary}`,
+    `${input.name} is ${modeText}. HireGEN found ${skills.length} skill signals led by resume experience${hasGithub ? " with scanned GitHub as supplementary proof" : ""}${productProofSkill ? " and live product proof as candidate-supplied product signal" : ""}. Strongest evidence appears in ${strongest}.${currentRole ? ` Current role signal: ${currentRole}.` : ""}${certifications.length ? ` Certifications found: ${certifications.slice(0, 2).join(", ")}.` : ""} ${productProofSkill ? productProofReason(input, evidenceSignals) : evidenceSignals.github.summary}`,
     420,
   );
+  const badges = [
+    {
+      id: "git-verified",
+      label: "Git Verified",
+      awarded: hasGithub,
+      reason: hasGithub ? clip(evidenceSignals.github.summary, 180) : "No public GitHub portfolio evidence found yet",
+    },
+    {
+      id: "skill-graph",
+      label: "Skill Graph",
+      awarded: true,
+      reason: `${skills.length} skills mapped from candidate-provided evidence`,
+    },
+    {
+      id: "project-builder",
+      label: "Project Builder",
+      awarded: hasProjects,
+      reason: hasProjects ? clip(`${liveProjects.length} live project link(s) reachable; first: ${liveProjects[0]?.title || projectRef}`, 180) : "Add reachable live projects or repository links to unlock",
+    },
+    ...(productProofSkill
+      ? [
+          {
+            id: "product-proof",
+            label: "Product Proof",
+            awarded: true,
+            reason: productProofReason(input, evidenceSignals),
+          },
+        ]
+      : []),
+    ...(input.private_repo_status === "available_on_request"
+      ? [
+          {
+            id: "private-repo-proof",
+            label: "Private Repo Proof",
+            awarded: false,
+            reason: "Private repo/screenshots available on request; ownership and commits are pending human review.",
+          },
+        ]
+      : []),
+    {
+      id: "lab-proof",
+      label: "Lab Proof",
+      awarded: false,
+      reason: "Timed validation lab not completed yet",
+    },
+    {
+      id: "career-bridge",
+      label: "Career Bridge",
+      awarded: matchScore >= 70,
+      reason: matchScore >= 70 ? "Profile has enough signal for a guided 12-week career plan" : "Needs stronger evidence before recruiter intro",
+    },
+  ];
 
   return skillGraphSchema.parse({
     id: "generated",
@@ -664,39 +836,8 @@ function buildFallbackSkillGraph(input: BuilderInput, evidenceSignals: EvidenceS
     summary,
     github: input.github_url,
     skills,
-    badges: [
-      {
-        id: "git-verified",
-        label: "Git Verified",
-        awarded: hasGithub,
-        reason: hasGithub ? clip(evidenceSignals.github.summary, 180) : "No public GitHub portfolio evidence found yet",
-      },
-      {
-        id: "skill-graph",
-        label: "Skill Graph",
-        awarded: true,
-        reason: `${skills.length} skills mapped from candidate-provided evidence`,
-      },
-      {
-        id: "project-builder",
-        label: "Project Builder",
-        awarded: hasProjects,
-        reason: hasProjects ? clip(`${liveProjects.length} live project link(s) reachable; first: ${liveProjects[0]?.title || projectRef}`, 180) : "Add reachable live projects or repository links to unlock",
-      },
-      {
-        id: "lab-proof",
-        label: "Lab Proof",
-        awarded: false,
-        reason: "Timed validation lab not completed yet",
-      },
-      {
-        id: "career-bridge",
-        label: "Career Bridge",
-        awarded: matchScore >= 70,
-        reason: matchScore >= 70 ? "Profile has enough signal for a guided 12-week career plan" : "Needs stronger evidence before recruiter intro",
-      },
-    ],
-    gaps: buildGaps(input.analysis_mode, target, hasGithub, hasProjects, evidenceSignals),
+    badges: prioritizeBadges(badges).slice(0, 8),
+    gaps: buildGaps(input, target, hasGithub, hasProjects, evidenceSignals),
     roadmap_90d: buildRoadmap(input.analysis_mode, targetRole, skills),
   });
 }
@@ -830,7 +971,7 @@ function clip(value: string, maxLength: number): string {
 }
 
 function buildGaps(
-  analysisMode: BuilderInput["analysis_mode"],
+  input: BuilderInput,
   target: string,
   hasGithub: boolean,
   hasProjects: boolean,
@@ -838,8 +979,9 @@ function buildGaps(
 ): SkillGraph["gaps"] {
   const targetMentionsCloud = /cloud|azure|aws|platform|architect|devops|sre/.test(target);
   const targetMentionsAi = /ai|ml|llm|agent|automation/.test(target);
+  const hasProductProof = Boolean(buildProductProofSkill(input, evidenceSignals));
 
-  if (analysisMode === "target_gap") {
+  if (input.analysis_mode === "target_gap") {
     return [
       {
         skill: targetMentionsCloud ? "Target architecture proof" : "Target-role proof",
@@ -854,9 +996,11 @@ function buildGaps(
           : "Add recent tooling, automation, observability, or cloud migration proof aligned to the target role.",
       },
       {
-        skill: "Lab Proof",
+        skill: hasProductProof ? "Product-to-role proof" : "Lab Proof",
         severity: "medium",
-        recommendation: "Complete a controlled role-specific lab to convert senior resume claims into verified proof.",
+        recommendation: hasProductProof
+          ? "Connect live product evidence to target-role skills with architecture, repo review, decision logs, and measurable user/workflow value."
+          : "Complete a controlled role-specific lab to convert senior resume claims into verified proof.",
       },
     ];
   }
@@ -868,11 +1012,13 @@ function buildGaps(
       recommendation: "Turn strongest resume projects into proof artifacts: architecture note, incident/RCA sample, migration case study, and health-check template.",
     },
     {
-      skill: "Git/project evidence",
-      severity: hasGithub && hasProjects && evidenceSignals.github.quality === "structured" ? "low" : "medium",
+      skill: hasProductProof ? "Product proof packaging" : "Git/project evidence",
+      severity: hasProductProof && input.private_repo_status === "available_on_request" ? "low" : hasGithub && hasProjects && evidenceSignals.github.quality === "structured" ? "low" : "medium",
       recommendation:
-        hasGithub || hasProjects
-          ? "Improve portfolio proof: clear READMEs, project descriptions, architecture diagrams, live links, and pinned repos matching the resume."
+        hasProductProof
+          ? "Add product brief, architecture note, screenshots/demo, user/workflow evidence, and private repo or commit review path."
+          : hasGithub || hasProjects
+            ? "Improve portfolio proof: clear READMEs, project descriptions, architecture diagrams, live links, and pinned repos matching the resume."
           : "Add public-safe infrastructure scripts, runbooks, or lab repos so GitHub supports the senior resume profile.",
     },
     {
