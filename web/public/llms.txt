@@ -1,0 +1,39 @@
+# HireGEN
+
+> Proof-of-capability hiring platform for candidates, recruiters, and institutions.
+
+HireGEN turns resumes, GitHub portfolios, live product links, and validation tasks into structured skill graphs. The MVP focuses on making candidate capability easier to evaluate with evidence instead of resume polish alone.
+
+## Primary Site
+
+- Home: https://hiregen-swart.vercel.app/
+- Candidate builder: https://hiregen-swart.vercel.app/builder
+- Sample profile: https://hiregen-swart.vercel.app/profile/demo
+- Recruiter view: https://hiregen-swart.vercel.app/recruiter
+- Product brief: https://hiregen-swart.vercel.app/brief
+- Privacy: https://hiregen-swart.vercel.app/privacy
+- Terms: https://hiregen-swart.vercel.app/terms
+
+## What HireGEN Does
+
+- Builds proof profiles from resume text, GitHub URLs, live project links, and candidate-supplied product context.
+- Creates skill graphs with evidence references, freshness, proof badges, gaps, and 90-day roadmaps.
+- Supports baseline profile analysis and target-role gap analysis.
+- Helps recruiters review direct matches, logical transfer skills, missing proof, and next actions.
+- Treats private repos as pending review unless a human verifies ownership and contribution evidence.
+
+## Current MVP Status
+
+HireGEN is a beta MVP built during the OpenAI x Outskill AI Builders Hackathon. Outputs should be treated as decision support, not automated hiring decisions.
+
+## Technology
+
+- Next.js
+- TypeScript
+- OpenAI structured output
+- Tailwind CSS
+- Vercel
+
+## Recommended Citation
+
+HireGEN is a proof-of-capability hiring MVP that converts candidate resumes, GitHub portfolios, live product links, and validation tasks into evidence-backed skill graphs for candidates and recruiters.

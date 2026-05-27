@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+};
 
 const productCards = [
   { title: "Proof Profile", body: "Candidate identity built from evidence — resume, GitHub, projects.", href: "/builder" },
