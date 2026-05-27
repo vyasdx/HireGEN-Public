@@ -192,6 +192,7 @@ function normalizeOpenAIOutput(raw: unknown, input: BuilderInput, evidenceSignal
   ensureEvidenceSignals(graph, evidenceSignals);
   ensureBaselineProfileQuality(graph, input, evidenceSignals);
   ensureTargetGapQuality(graph, input);
+  normalizeScores(graph, input);
 
   if (typeof graph.summary === "string" && evidenceSignals.github.scanned) {
     const hasGithubMention = /github|repo|portfolio/i.test(graph.summary);
@@ -291,8 +292,10 @@ function ensureBaselineProfileQuality(graph: Record<string, unknown>, input: Bui
 function ensureTargetGapQuality(graph: Record<string, unknown>, input: BuilderInput): void {
   const target = `${input.target_role} ${input.target_job_description}`.toLowerCase();
   const resume = input.resume_text.toLowerCase();
-  const isAiOpsTarget = /ai systems|aiops|agentic|rag|anomaly|predictive|machine learning|genai|llm/.test(target);
-  const hasOpsBackground = /aix|suse|linux|incident|rca|sap|hana|azure|cloud|operations|pacemaker|gpfs/.test(resume);
+  const isAiOpsTarget = /ai systems|aiops|operational intelligence|agentic rca|rag over runbooks|anomaly detection|predictive remediation/.test(target);
+  const opsSignals = [/\baix\b/, /suse/, /linux/, /incident/, /\brca\b/, /sap/, /hana/, /operations/, /pacemaker/, /gpfs/, /power\s*ha/, /hacmp/];
+  const opsSignalCount = opsSignals.filter((pattern) => pattern.test(resume)).length;
+  const hasOpsBackground = opsSignalCount >= 2;
 
   if (input.analysis_mode !== "target_gap" || !isAiOpsTarget || !hasOpsBackground) return;
 
@@ -331,6 +334,42 @@ function ensureTargetGapQuality(graph: Record<string, unknown>, input: BuilderIn
     420,
   );
   graph.roadmap_90d = buildSeniorAiOpsRoadmap(input.target_role || "Senior AI Systems Engineer");
+}
+
+function normalizeScores(graph: Record<string, unknown>, input: BuilderInput): void {
+  const skills = Array.isArray(graph.skills) ? graph.skills as Array<Record<string, unknown>> : [];
+  if (!skills.length) return;
+
+  const numericScores = skills
+    .map((skill) => Number(skill.score))
+    .filter((score) => Number.isFinite(score));
+  const maxSkillScore = Math.max(...numericScores);
+
+  if (maxSkillScore > 0 && maxSkillScore <= 10) {
+    for (const skill of skills) {
+      const score = Number(skill.score);
+      if (Number.isFinite(score)) {
+        skill.score = Math.max(0, Math.min(100, Math.round(score * 10)));
+      }
+    }
+  }
+
+  const normalizedScores = skills
+    .map((skill) => Number(skill.score))
+    .filter((score) => Number.isFinite(score));
+  const averageSkillScore = Math.round(normalizedScores.reduce((sum, score) => sum + score, 0) / normalizedScores.length);
+  const gaps = Array.isArray(graph.gaps) ? graph.gaps as Array<Record<string, unknown>> : [];
+  const gapPenalty = gaps.reduce((sum, gap) => {
+    if (gap.severity === "high") return sum + 6;
+    if (gap.severity === "medium") return sum + 3;
+    return sum + 1;
+  }, 0);
+
+  const currentMatchScore = Number(graph.match_score);
+  if (!Number.isFinite(currentMatchScore) || currentMatchScore <= 10) {
+    const floor = input.analysis_mode === "target_gap" ? 20 : 45;
+    graph.match_score = Math.max(floor, Math.min(94, averageSkillScore - gapPenalty));
+  }
 }
 
 function buildAiOpsTargetSkillMatches(input: BuilderInput): SkillGraph["skills"] {

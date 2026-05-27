@@ -12,7 +12,7 @@ export function Nav() {
 
         <nav className="relative z-10 hidden md:flex items-center gap-7 text-sm text-ink-700">
           <Link href="/builder" className="hover:text-ink-900">Builder</Link>
-          <Link href="/profile/demo" className="hover:text-ink-900">Sample Profile</Link>
+          <Link href="/samples" className="hover:text-ink-900">Samples</Link>
           <Link href="/recruiter" className="hover:text-ink-900">Recruiter</Link>
           <Link href="/brief" className="hover:text-ink-900">Pitch</Link>
         </nav>

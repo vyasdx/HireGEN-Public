@@ -19,7 +19,7 @@ export function Footer() {
             <div className="text-xs font-semibold text-ink-900 uppercase tracking-wider">Product</div>
             <ul className="mt-3 space-y-2 text-ink-500">
               <li><Link href="/builder" className="hover:text-ink-900">Builder</Link></li>
-              <li><Link href="/profile/demo" className="hover:text-ink-900">Sample Profile</Link></li>
+              <li><Link href="/samples" className="hover:text-ink-900">Sample Lab</Link></li>
               <li><Link href="/recruiter" className="hover:text-ink-900">Recruiter View</Link></li>
               <li><Link href="/brief" className="hover:text-ink-900">Investor Pitch</Link></li>
             </ul>
