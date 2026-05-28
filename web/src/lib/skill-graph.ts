@@ -100,6 +100,7 @@ async function generateWithOpenAI(input: BuilderInput, evidenceSignals: Evidence
             target_job_description: input.target_job_description,
             resume_text: input.resume_text,
             github_url: input.github_url,
+            github_urls: input.github_urls,
             project_links: input.project_links,
             product_context: input.product_context,
             product_role: input.product_role,
@@ -610,14 +611,53 @@ function inferProductValueSignals(html: string): string[] {
 }
 
 async function collectEvidenceSignals(input: BuilderInput): Promise<EvidenceSignals> {
+  const githubUrls = Array.from(new Set([input.github_url, ...input.github_urls].map((url) => url.trim()).filter(Boolean))).slice(0, 5);
   const [github, projects] = await Promise.all([
-    analyzeGitHub(input.github_url),
+    analyzeGitHubSources(githubUrls),
     Promise.all(input.project_links.map((url) => analyzeProjectLink(url))),
   ]);
 
   return {
     github,
     projects,
+  };
+}
+
+async function analyzeGitHubSources(githubUrls: string[]): Promise<EvidenceSignals["github"]> {
+  if (!githubUrls.length) return analyzeGitHub("");
+
+  const signals = await Promise.all(githubUrls.map((url) => analyzeGitHub(url)));
+  const scanned = signals.filter((signal) => signal.scanned);
+  if (!scanned.length) {
+    return {
+      handle: signals.map((signal) => signal.handle).filter(Boolean).join(", "),
+      scanned: false,
+      repo_count: 0,
+      quality: "unavailable",
+      summary: "GitHub scan was unavailable for supplied source(s); treat GitHub as supplied but not verified.",
+      repos: [],
+    };
+  }
+
+  const repos = scanned.flatMap((signal) => signal.repos).slice(0, 12);
+  const repoCount = scanned.reduce((sum, signal) => sum + signal.repo_count, 0);
+  const handles = scanned.map((signal) => signal.handle).filter(Boolean);
+  const hasStructured = scanned.some((signal) => signal.quality === "structured");
+  const hasNeedsStructure = scanned.some((signal) => signal.quality === "needs_structure");
+  const quality: EvidenceSignals["github"]["quality"] = hasStructured ? "structured" : hasNeedsStructure ? "needs_structure" : scanned[0]?.quality ?? "unavailable";
+  const topRepos = repos.slice(0, 4).map((repo) => repo.name).filter(Boolean).join(", ");
+  const sourceLabel = handles.length > 1 ? `${handles.length} GitHub sources` : `GitHub source ${handles[0]}`;
+
+  return {
+    handle: handles.join(", "),
+    scanned: true,
+    repo_count: repoCount,
+    quality,
+    summary:
+      quality === "structured"
+        ? `Scanned ${sourceLabel}; found ${repoCount} public repos; strongest recent repos include ${topRepos || "unnamed repos"}.`
+        : `Scanned ${sourceLabel}; found ${repoCount} public repos, but portfolio structure needs clearer READMEs, descriptions, live links, and pinned proof projects.`,
+    repos,
   };
 }
 

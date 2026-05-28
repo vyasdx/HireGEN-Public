@@ -10,6 +10,8 @@ export function BuilderForm() {
   const [state, setState] = useState<SubmitState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [analysisMode, setAnalysisMode] = useState<"baseline_profile" | "target_gap">("baseline_profile");
+  const [githubUrls, setGithubUrls] = useState<string[]>([""]);
+  const [projectLinks, setProjectLinks] = useState<string[]>([""]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -17,10 +19,8 @@ export function BuilderForm() {
     setError(null);
 
     const form = new FormData(event.currentTarget);
-    const projectLinks = String(form.get("projects") ?? "")
-      .split(/\r?\n/)
-      .map((link) => link.trim())
-      .filter(Boolean);
+    const cleanGithubUrls = githubUrls.map((link) => link.trim()).filter(Boolean);
+    const cleanProjectLinks = projectLinks.map((link) => link.trim()).filter(Boolean);
 
     const payload = {
       analysis_mode: analysisMode,
@@ -28,8 +28,9 @@ export function BuilderForm() {
       target_role: String(form.get("role") ?? ""),
       target_job_description: String(form.get("target_job_description") ?? ""),
       resume_text: String(form.get("resume") ?? ""),
-      github_url: String(form.get("github") ?? ""),
-      project_links: projectLinks,
+      github_url: cleanGithubUrls[0] ?? "",
+      github_urls: cleanGithubUrls,
+      project_links: cleanProjectLinks,
       product_context: String(form.get("product_context") ?? ""),
       product_role: String(form.get("product_role") ?? ""),
       product_users: String(form.get("product_users") ?? ""),
@@ -157,34 +158,87 @@ export function BuilderForm() {
         />
       </div>
 
-      <div>
-        <label htmlFor="github" className="text-sm font-semibold text-ink-900">
-          GitHub URL
-        </label>
-        <input
-          id="github"
-          name="github"
-          type="url"
-          placeholder="https://github.com/your-handle"
-          className="mt-2 w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
-        />
-      </div>
+      <fieldset className="space-y-3">
+        <div>
+          <legend className="text-sm font-semibold text-ink-900">Git and code sources</legend>
+          <p className="text-xs text-ink-500 mt-1">
+            Add public GitHub profiles or repo links. Private repos stay candidate-supplied until reviewed.
+          </p>
+        </div>
+        {githubUrls.map((url, index) => (
+          <div key={`github-${index}`} className="flex gap-2">
+            <input
+              type="url"
+              value={url}
+              onChange={(event) =>
+                setGithubUrls((items) => items.map((item, itemIndex) => (itemIndex === index ? event.target.value : item)))
+              }
+              placeholder={index === 0 ? "https://github.com/your-handle" : "https://github.com/another-handle-or-repo"}
+              className="w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+            />
+            {githubUrls.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setGithubUrls((items) => items.filter((_, itemIndex) => itemIndex !== index))}
+                className="px-4 py-3 rounded-xl bg-white/70 border border-white/70 text-ink-700 font-semibold hover:text-red-600"
+                aria-label="Remove Git source"
+              >
+                -
+              </button>
+            )}
+          </div>
+        ))}
+        {githubUrls.length < 5 && (
+          <button
+            type="button"
+            onClick={() => setGithubUrls((items) => [...items, ""])}
+            className="btn-glass !px-4 !py-2 !rounded-xl text-sm"
+          >
+            + Add Git/source
+          </button>
+        )}
+      </fieldset>
 
-      <div>
-        <label htmlFor="projects" className="text-sm font-semibold text-ink-900">
-          Live project links (one per line)
-        </label>
-        <p className="text-xs text-ink-500 mb-2">
-          Add completed/live products, demos, docs, or repo links. HireGEN checks reachability and uses them as proof signals.
-        </p>
-        <textarea
-          id="projects"
-          name="projects"
-          rows={3}
-          placeholder="https://www.disciplinem.com/&#10;https://www.vidyasutra.co.in/&#10;https://github.com/your-handle/repo"
-          className="mt-2 w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40 resize-y"
-        />
-      </div>
+      <fieldset className="space-y-3">
+        <div>
+          <legend className="text-sm font-semibold text-ink-900">Live project links</legend>
+          <p className="text-xs text-ink-500 mt-1">
+            Add completed/live products, demos, docs, or portfolio pages. HireGEN checks reachability and uses them as proof signals.
+          </p>
+        </div>
+        {projectLinks.map((url, index) => (
+          <div key={`project-${index}`} className="flex gap-2">
+            <input
+              type="url"
+              value={url}
+              onChange={(event) =>
+                setProjectLinks((items) => items.map((item, itemIndex) => (itemIndex === index ? event.target.value : item)))
+              }
+              placeholder={index === 0 ? "https://www.disciplinem.com/" : "https://www.vidyasutra.co.in/"}
+              className="w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+            />
+            {projectLinks.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setProjectLinks((items) => items.filter((_, itemIndex) => itemIndex !== index))}
+                className="px-4 py-3 rounded-xl bg-white/70 border border-white/70 text-ink-700 font-semibold hover:text-red-600"
+                aria-label="Remove project link"
+              >
+                -
+              </button>
+            )}
+          </div>
+        ))}
+        {projectLinks.length < 8 && (
+          <button
+            type="button"
+            onClick={() => setProjectLinks((items) => [...items, ""])}
+            className="btn-glass !px-4 !py-2 !rounded-xl text-sm"
+          >
+            + Add project
+          </button>
+        )}
+      </fieldset>
 
       <fieldset className="glass-soft p-4 space-y-4">
         <legend className="text-sm font-semibold text-ink-900">Product proof details</legend>

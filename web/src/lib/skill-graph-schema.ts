@@ -68,6 +68,7 @@ export const builderInputSchema = z.object({
   target_job_description: z.string().trim().max(4000).optional().default(""),
   resume_text: z.string().trim().min(20).max(12000),
   github_url: z.string().trim().max(180).optional().default(""),
+  github_urls: z.array(z.string().trim().max(180)).max(5).optional().default([]),
   project_links: z.array(z.string().trim().max(180)).max(8).optional().default([]),
   product_context: z.string().trim().max(2000).optional().default(""),
   product_role: z.string().trim().max(1000).optional().default(""),

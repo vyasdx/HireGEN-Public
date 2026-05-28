@@ -62,7 +62,9 @@ export function SampleProfileLab({ samples }: { samples: StressSample[] }) {
             type="button"
             onClick={() => setFilter(item.id)}
             className={`relative z-10 rounded-full px-4 py-2 text-sm font-semibold transition ${
-              filter === item.id ? "bg-ink-950 text-white shadow-soft" : "bg-white/65 text-ink-600 hover:text-ink-950"
+              filter === item.id
+                ? "bg-white text-ink-950 shadow-soft ring-2 ring-ink-950/80"
+                : "bg-white/65 text-ink-600 hover:text-ink-950"
             }`}
           >
             {item.label}
