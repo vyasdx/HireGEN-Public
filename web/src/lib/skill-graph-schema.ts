@@ -70,6 +70,13 @@ export const builderInputSchema = z.object({
   github_url: z.string().trim().max(180).optional().default(""),
   github_urls: z.array(z.string().trim().max(180)).max(5).optional().default([]),
   project_links: z.array(z.string().trim().max(180)).max(8).optional().default([]),
+  project_details: z.array(z.object({
+    url: z.string().trim().max(180).optional().default(""),
+    value: z.string().trim().max(600).optional().default(""),
+    role: z.string().trim().max(500).optional().default(""),
+    users: z.string().trim().max(500).optional().default(""),
+    private_repo_status: z.enum(["", "none", "available_on_request", "not_available"]).optional().default(""),
+  })).max(8).optional().default([]),
   product_context: z.string().trim().max(2000).optional().default(""),
   product_role: z.string().trim().max(1000).optional().default(""),
   product_users: z.string().trim().max(1000).optional().default(""),

@@ -102,6 +102,7 @@ async function generateWithOpenAI(input: BuilderInput, evidenceSignals: Evidence
             github_url: input.github_url,
             github_urls: input.github_urls,
             project_links: input.project_links,
+            project_details: input.project_details,
             product_context: input.product_context,
             product_role: input.product_role,
             product_users: input.product_users,

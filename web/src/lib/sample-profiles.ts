@@ -2,7 +2,10 @@ import type { BuilderInput } from "@/lib/skill-graph-schema";
 
 export type SampleAudience = "students" | "employees" | "recruiters";
 
-type OptionalSampleFields = Pick<BuilderInput, "github_urls" | "product_context" | "product_role" | "product_users" | "private_repo_status">;
+type OptionalSampleFields = Pick<
+  BuilderInput,
+  "github_urls" | "project_details" | "product_context" | "product_role" | "product_users" | "private_repo_status"
+>;
 
 export type StressSample = Omit<BuilderInput, keyof OptionalSampleFields> & Partial<OptionalSampleFields> & {
   id: string;

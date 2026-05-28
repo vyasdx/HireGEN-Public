@@ -4,6 +4,21 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type SubmitState = "idle" | "loading" | "error";
+type ProjectEvidence = {
+  url: string;
+  value: string;
+  role: string;
+  users: string;
+  privateRepoStatus: "" | "none" | "available_on_request" | "not_available";
+};
+
+const emptyProjectEvidence = (): ProjectEvidence => ({
+  url: "",
+  value: "",
+  role: "",
+  users: "",
+  privateRepoStatus: "",
+});
 
 export function BuilderForm() {
   const router = useRouter();
@@ -11,7 +26,7 @@ export function BuilderForm() {
   const [error, setError] = useState<string | null>(null);
   const [analysisMode, setAnalysisMode] = useState<"baseline_profile" | "target_gap">("baseline_profile");
   const [githubUrls, setGithubUrls] = useState<string[]>([""]);
-  const [projectLinks, setProjectLinks] = useState<string[]>([""]);
+  const [projects, setProjects] = useState<ProjectEvidence[]>([emptyProjectEvidence()]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -20,7 +35,32 @@ export function BuilderForm() {
 
     const form = new FormData(event.currentTarget);
     const cleanGithubUrls = githubUrls.map((link) => link.trim()).filter(Boolean);
-    const cleanProjectLinks = projectLinks.map((link) => link.trim()).filter(Boolean);
+    const cleanProjects = projects
+      .map((project) => ({
+        url: project.url.trim(),
+        value: project.value.trim(),
+        role: project.role.trim(),
+        users: project.users.trim(),
+        private_repo_status: project.privateRepoStatus,
+      }))
+      .filter((project) => project.url || project.value || project.role || project.users);
+    const cleanProjectLinks = cleanProjects.map((project) => project.url).filter(Boolean);
+    const combinedProductContext = cleanProjects
+      .map((project, index) => `Project ${index + 1}${project.url ? ` (${project.url})` : ""}: ${project.value || "No problem/value supplied."}`)
+      .join("\n");
+    const combinedProductRole = cleanProjects
+      .map((project, index) => `Project ${index + 1}${project.url ? ` (${project.url})` : ""}: ${project.role || "No candidate role supplied."}`)
+      .join("\n");
+    const combinedProductUsers = cleanProjects
+      .map((project, index) => `Project ${index + 1}${project.url ? ` (${project.url})` : ""}: ${project.users || "No users/status supplied."}`)
+      .join("\n");
+    const privateRepoStatus = cleanProjects.some((project) => project.private_repo_status === "available_on_request")
+      ? "available_on_request"
+      : cleanProjects.some((project) => project.private_repo_status === "not_available")
+        ? "not_available"
+        : cleanProjects.some((project) => project.private_repo_status === "none")
+          ? "none"
+          : "";
 
     const payload = {
       analysis_mode: analysisMode,
@@ -31,10 +71,11 @@ export function BuilderForm() {
       github_url: cleanGithubUrls[0] ?? "",
       github_urls: cleanGithubUrls,
       project_links: cleanProjectLinks,
-      product_context: String(form.get("product_context") ?? ""),
-      product_role: String(form.get("product_role") ?? ""),
-      product_users: String(form.get("product_users") ?? ""),
-      private_repo_status: String(form.get("private_repo_status") ?? ""),
+      project_details: cleanProjects,
+      product_context: combinedProductContext,
+      product_role: combinedProductRole,
+      product_users: combinedProductUsers,
+      private_repo_status: privateRepoStatus,
     };
 
     const response = await fetch("/api/skill-graph", {
@@ -199,40 +240,92 @@ export function BuilderForm() {
         )}
       </fieldset>
 
-      <fieldset className="space-y-3">
+      <fieldset className="space-y-4">
         <div>
-          <legend className="text-sm font-semibold text-ink-900">Live project links</legend>
+          <legend className="text-sm font-semibold text-ink-900">Live product / project proof</legend>
           <p className="text-xs text-ink-500 mt-1">
-            Add completed/live products, demos, docs, or portfolio pages. HireGEN checks reachability and uses them as proof signals.
+            Add each product separately so proof, role, and value do not get mixed across projects.
           </p>
         </div>
-        {projectLinks.map((url, index) => (
-          <div key={`project-${index}`} className="flex gap-2">
-            <input
-              type="url"
-              value={url}
-              onChange={(event) =>
-                setProjectLinks((items) => items.map((item, itemIndex) => (itemIndex === index ? event.target.value : item)))
-              }
-              placeholder={index === 0 ? "https://www.disciplinem.com/" : "https://www.vidyasutra.co.in/"}
-              className="w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
-            />
-            {projectLinks.length > 1 && (
-              <button
-                type="button"
-                onClick={() => setProjectLinks((items) => items.filter((_, itemIndex) => itemIndex !== index))}
-                className="px-4 py-3 rounded-xl bg-white/70 border border-white/70 text-ink-700 font-semibold hover:text-red-600"
-                aria-label="Remove project link"
-              >
-                -
-              </button>
-            )}
-          </div>
-        ))}
-        {projectLinks.length < 8 && (
+        <div className="space-y-3">
+          {projects.map((project, index) => (
+            <div key={`project-${index}`} className="glass-soft p-3">
+              <div className="relative z-10 mb-2 flex items-center justify-between gap-3">
+                <div className="text-xs font-semibold uppercase text-ink-500">Project {index + 1}</div>
+                {projects.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setProjects((items) => items.filter((_, itemIndex) => itemIndex !== index))}
+                    className="rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-ink-700 hover:text-red-600"
+                    aria-label="Remove project"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <div className="relative z-10 grid gap-2 lg:grid-cols-[1.25fr_1fr_1fr_.9fr_.85fr]">
+                <input
+                  type="url"
+                  value={project.url}
+                  onChange={(event) =>
+                    setProjects((items) => items.map((item, itemIndex) => (itemIndex === index ? { ...item, url: event.target.value } : item)))
+                  }
+                  placeholder={index === 0 ? "https://www.disciplinem.com/" : "https://www.vidyasutra.co.in/"}
+                  className="w-full px-3 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                />
+                <input
+                  type="text"
+                  value={project.value}
+                  onChange={(event) =>
+                    setProjects((items) => items.map((item, itemIndex) => (itemIndex === index ? { ...item, value: event.target.value } : item)))
+                  }
+                  placeholder="Problem/value"
+                  className="w-full px-3 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                />
+                <input
+                  type="text"
+                  value={project.role}
+                  onChange={(event) =>
+                    setProjects((items) => items.map((item, itemIndex) => (itemIndex === index ? { ...item, role: event.target.value } : item)))
+                  }
+                  placeholder="Your role"
+                  className="w-full px-3 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                />
+                <input
+                  type="text"
+                  value={project.users}
+                  onChange={(event) =>
+                    setProjects((items) => items.map((item, itemIndex) => (itemIndex === index ? { ...item, users: event.target.value } : item)))
+                  }
+                  placeholder="Users/status"
+                  className="w-full px-3 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                />
+                <select
+                  value={project.privateRepoStatus}
+                  onChange={(event) =>
+                    setProjects((items) =>
+                      items.map((item, itemIndex) =>
+                        itemIndex === index
+                          ? { ...item, privateRepoStatus: event.target.value as ProjectEvidence["privateRepoStatus"] }
+                          : item,
+                      ),
+                    )
+                  }
+                  className="w-full px-3 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                >
+                  <option value="">Repo proof?</option>
+                  <option value="none">No private repo</option>
+                  <option value="available_on_request">Private proof available</option>
+                  <option value="not_available">Cannot share repo</option>
+                </select>
+              </div>
+            </div>
+          ))}
+        </div>
+        {projects.length < 8 && (
           <button
             type="button"
-            onClick={() => setProjectLinks((items) => [...items, ""])}
+            onClick={() => setProjects((items) => [...items, emptyProjectEvidence()])}
             className="btn-glass !px-4 !py-2 !rounded-xl text-sm"
           >
             + Add project
@@ -240,67 +333,11 @@ export function BuilderForm() {
         )}
       </fieldset>
 
-      <fieldset className="glass-soft p-4 space-y-4">
-        <legend className="text-sm font-semibold text-ink-900">Product proof details</legend>
+      <fieldset className="glass-soft p-4 space-y-2">
+        <legend className="text-sm font-semibold text-ink-900">Attachment support</legend>
         <p className="text-xs text-ink-500">
-          Useful when public GitHub is incomplete, private repos hold real work, or the product is niche.
+          Post-MVP: upload PDF, DOCX, TXT, or Markdown resumes. For this stable hackathon build, paste text remains the reliable path.
         </p>
-
-        <div>
-          <label htmlFor="product_context" className="text-sm font-semibold text-ink-900">
-            Product problem and value
-          </label>
-          <textarea
-            id="product_context"
-            name="product_context"
-            rows={3}
-            placeholder="What problem does the product solve? Who benefits? What value does it create?"
-            className="mt-2 w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40 resize-y"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="product_role" className="text-sm font-semibold text-ink-900">
-            Your role in the product
-          </label>
-          <textarea
-            id="product_role"
-            name="product_role"
-            rows={2}
-            placeholder="What did you build personally? Architecture, frontend, backend, AI, deployment, operations, integrations..."
-            className="mt-2 w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40 resize-y"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="product_users" className="text-sm font-semibold text-ink-900">
-            Users, status, or traction
-          </label>
-          <textarea
-            id="product_users"
-            name="product_users"
-            rows={2}
-            placeholder="Who uses it? Is it live, beta, internal, client-facing, demo, or early traction?"
-            className="mt-2 w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40 resize-y"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="private_repo_status" className="text-sm font-semibold text-ink-900">
-            Private repo proof
-          </label>
-          <select
-            id="private_repo_status"
-            name="private_repo_status"
-            className="mt-2 w-full px-4 py-3 rounded-xl bg-white/80 border border-white/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
-            defaultValue=""
-          >
-            <option value="">Not specified</option>
-            <option value="none">No private repo proof</option>
-            <option value="available_on_request">Private repo or screenshots available on request</option>
-            <option value="not_available">Private repo cannot be shared</option>
-          </select>
-        </div>
       </fieldset>
 
       {error && (
