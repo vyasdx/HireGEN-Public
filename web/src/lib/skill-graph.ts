@@ -4,6 +4,10 @@ import {
   skillGraphJsonSchema,
   skillGraphSchema,
 } from "@/lib/skill-graph-schema";
+import {
+  buildRoleIntelligence,
+  type RoleIntelligenceContext,
+} from "@/lib/role-intelligence";
 
 type GenerationMode = "openai" | "fallback";
 type SkillCategory = SkillGraph["skills"][number]["category"];
@@ -52,10 +56,11 @@ type ResponsesApiResult = {
 
 export async function generateSkillGraph(input: BuilderInput): Promise<SkillGraphGeneration> {
   const evidenceSignals = await collectEvidenceSignals(input);
+  const roleIntelligence = buildRoleIntelligence(input);
 
   if (!process.env.OPENAI_API_KEY) {
     return {
-      graph: buildFallbackSkillGraph(input, evidenceSignals),
+      graph: buildFallbackSkillGraph(input, evidenceSignals, roleIntelligence),
       mode: "fallback",
       warning: "OPENAI_API_KEY is not set; generated deterministic local demo output.",
     };
@@ -63,20 +68,24 @@ export async function generateSkillGraph(input: BuilderInput): Promise<SkillGrap
 
   try {
     return {
-      graph: await generateWithOpenAI(input, evidenceSignals),
+      graph: await generateWithOpenAI(input, evidenceSignals, roleIntelligence),
       mode: "openai",
     };
   } catch (error) {
     console.error("OpenAI skill graph generation failed", error);
     return {
-      graph: buildFallbackSkillGraph(input, evidenceSignals),
+      graph: buildFallbackSkillGraph(input, evidenceSignals, roleIntelligence),
       mode: "fallback",
       warning: "OpenAI generation failed; generated deterministic local demo output.",
     };
   }
 }
 
-async function generateWithOpenAI(input: BuilderInput, evidenceSignals: EvidenceSignals): Promise<SkillGraph> {
+async function generateWithOpenAI(
+  input: BuilderInput,
+  evidenceSignals: EvidenceSignals,
+  roleIntelligence: RoleIntelligenceContext,
+): Promise<SkillGraph> {
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
@@ -89,7 +98,7 @@ async function generateWithOpenAI(input: BuilderInput, evidenceSignals: Evidence
         {
           role: "system",
           content:
-            "You are HireGEN's skill validation engine. Build an honest candidate proof profile from the supplied resume, scanned GitHub signals, live product/project signals, product notes, and optional target role/job description. Resume is the primary source for experience, certifications, current role, enterprise skills, and domain expertise. GitHub, live product links, and private repo status are proof signals with different confidence levels: reachable live products can prove existence and product direction; private repos/screenshots are candidate-supplied until reviewed; public GitHub proves only what is visible. Do not penalize niche products for low popularity. Judge product value by problem clarity, user/workflow clarity, candidate role, live reachability, traction/status, architecture/demo evidence, and supporting proof. Do not invent employers, degrees, repos, links, certifications, users, revenue, ownership, or lab results. Mark uncertain claims as candidate-supplied or pending review. If no GitHub URL/source is supplied, do not mention GitHub as evidence. If live product links exist, do not reduce the profile to 'GitHub is weak'; instead explain the product proof packaging needed: architecture note, screenshots/demo, private repo review path, commit evidence, and role/impact notes. For baseline_profile mode, describe the candidate's current profile and default career path based only on the resume domain. For non-infrastructure profiles, never produce AIX/Linux/SAP/cloud troubleshooting roadmaps unless those skills are explicitly in the resume or target role. For healthcare/business analyst resumes, focus on requirements gathering, client/stakeholder management, process flows, UAT, defect tracking, QA coordination, domain workflows, production support, documentation, and measurable BA proof. For target_gap mode, compare against the target role/JD and create a transition roadmap that bridges existing domain experience into the target. For AIOps/AI systems roles, avoid generic beginner advice; focus on Python over ops data, time-series anomaly detection, RAG over runbooks/incidents, agentic RCA workflows, observability, evaluation, drift monitoring, cloud deployment, and human-in-loop guardrails.",
+            "You are HireGEN's skill validation engine. Build an honest candidate proof profile from the supplied resume, scanned GitHub signals, live product/project signals, product notes, local role intelligence, and optional target role/job description. The local role_intelligence object is the ground truth for role requirements, skill aliases, logical transfers, and proof templates. Do not invent role requirements outside role_intelligence; if a useful requirement is not present, mark it as future taxonomy work rather than treating it as verified. Resume is the primary source for experience, certifications, current role, enterprise skills, and domain expertise. GitHub, live product links, and private repo status are proof signals with different confidence levels: reachable live products can prove existence and product direction; private repos/screenshots are candidate-supplied until reviewed; public GitHub proves only what is visible. Do not penalize niche products for low popularity. Judge product value by problem clarity, user/workflow clarity, candidate role, live reachability, traction/status, architecture/demo evidence, and supporting proof. Do not invent employers, degrees, repos, links, certifications, users, revenue, ownership, or lab results. Mark uncertain claims as candidate-supplied or pending review. If no GitHub URL/source is supplied, do not mention GitHub as evidence. If live product links exist, explain the product proof packaging needed: architecture note, screenshots/demo, private repo review path, commit evidence, and role/impact notes. For baseline_profile mode, describe the candidate's current profile and default career path based only on the resume domain and role_intelligence. For non-infrastructure profiles, never produce AIX/Linux/SAP/cloud troubleshooting roadmaps unless those skills are explicitly in the resume, target role, or role_intelligence. For healthcare/business analyst resumes, focus on requirements gathering, client/stakeholder management, process flows, UAT, defect tracking, QA coordination, domain workflows, production support, documentation, and measurable BA proof. For target_gap mode, compare against the target role/JD using role_intelligence.required_skills and create a transition roadmap that bridges existing domain experience into the target. For AIOps/AI systems roles, use the AI Systems Engineer role seed and focus on Python over ops data, time-series anomaly detection, RAG over runbooks/incidents, agentic RCA workflows, observability, evaluation, drift monitoring, cloud deployment, and human-in-loop guardrails.",
         },
         {
           role: "user",
@@ -108,6 +117,7 @@ async function generateWithOpenAI(input: BuilderInput, evidenceSignals: Evidence
             product_users: input.product_users,
             private_repo_status: input.private_repo_status,
             evidence_signals: evidenceSignals,
+            role_intelligence: roleIntelligence,
           }),
         },
       ],
@@ -849,7 +859,11 @@ function parseGitHubHandle(githubUrl: string): string {
   }
 }
 
-function buildFallbackSkillGraph(input: BuilderInput, evidenceSignals: EvidenceSignals): SkillGraph {
+function buildFallbackSkillGraph(
+  input: BuilderInput,
+  evidenceSignals: EvidenceSignals,
+  roleIntelligence: RoleIntelligenceContext,
+): SkillGraph {
   const resume = input.resume_text.toLowerCase();
   const targetRole = input.target_role.trim() || inferCurrentRole(input.resume_text) || "Current profile baseline";
   const target = `${targetRole} ${input.target_job_description}`.toLowerCase();
@@ -857,7 +871,10 @@ function buildFallbackSkillGraph(input: BuilderInput, evidenceSignals: EvidenceS
   const liveProjects = evidenceSignals.projects.filter((project) => project.reachable);
   const hasProjects = liveProjects.length > 0;
   const productProofSkill = buildProductProofSkill(input, evidenceSignals);
-  const skills = isBusinessAnalystResume(input.resume_text)
+  const roleSeedSkills = buildRoleIntelligenceSkills(input, roleIntelligence);
+  const skills = roleSeedSkills.length >= 4
+    ? roleSeedSkills
+    : isBusinessAnalystResume(input.resume_text)
     ? buildBusinessAnalystBaselineSkills(input, evidenceSignals)
     : buildResumeFirstSkills(resume, target, hasGithub, hasProjects, evidenceSignals);
   if (productProofSkill && !skills.some((skill) => skill.name === productProofSkill.name)) {
@@ -877,6 +894,11 @@ function buildFallbackSkillGraph(input: BuilderInput, evidenceSignals: EvidenceS
     `${input.name} is ${modeText}. HireGEN found ${skills.length} skill signals led by resume experience${hasGithub ? " with scanned GitHub as supplementary proof" : ""}${productProofSkill ? " and live product proof as candidate-supplied product signal" : ""}. Strongest evidence appears in ${strongest}.${currentRole ? ` Current role signal: ${currentRole}.` : ""}${certifications.length ? ` Certifications found: ${certifications.slice(0, 2).join(", ")}.` : ""} ${productProofSkill ? productProofReason(input, evidenceSignals) : evidenceSignals.github.summary}`,
     420,
   );
+  const gaps = buildGaps(input, target, hasGithub, hasProjects, evidenceSignals, roleIntelligence);
+  const finalMatchScore =
+    input.analysis_mode === "target_gap"
+      ? scoreTargetMatch(gaps, skills)
+      : matchScore;
   const badges = [
     {
       id: "git-verified",
@@ -925,8 +947,8 @@ function buildFallbackSkillGraph(input: BuilderInput, evidenceSignals: EvidenceS
     {
       id: "career-bridge",
       label: "Career Bridge",
-      awarded: matchScore >= 70,
-      reason: matchScore >= 70 ? "Profile has enough signal for a guided 12-week career plan" : "Needs stronger evidence before recruiter intro",
+      awarded: finalMatchScore >= 70,
+      reason: finalMatchScore >= 70 ? "Profile has enough signal for a guided 12-week career plan" : "Needs stronger evidence before recruiter intro",
     },
   ];
 
@@ -936,14 +958,79 @@ function buildFallbackSkillGraph(input: BuilderInput, evidenceSignals: EvidenceS
     city: inferCity(input.resume_text),
     education: inferEducation(input.resume_text),
     target_role: targetRole,
-    match_score: matchScore,
+    match_score: finalMatchScore,
     summary,
     github: input.github_url,
     skills,
     badges: prioritizeBadges(badges).slice(0, 8),
-    gaps: buildGaps(input, target, hasGithub, hasProjects, evidenceSignals),
-    roadmap_90d: buildRoadmap(input, targetRole, skills),
+    gaps,
+    roadmap_90d: buildRoadmap(input, targetRole, skills, roleIntelligence),
   });
+}
+
+function buildRoleIntelligenceSkills(input: BuilderInput, roleIntelligence: RoleIntelligenceContext): SkillGraph["skills"] {
+  const skills = roleIntelligence.required_skills
+    .map((roleSkill) => {
+      const evidence = getRoleSkillEvidence(input, roleSkill);
+      if (!evidence.direct && !evidence.transfer && input.analysis_mode !== "target_gap") return null;
+
+      const base = roleSkill.importance === "must_have" ? 78 : roleSkill.importance === "strong" ? 70 : 62;
+      const score = evidence.direct ? base + 6 : evidence.transfer ? base - 10 : Math.max(35, base - 28);
+      return targetSkill(
+        roleSkill.name,
+        roleSkill.category as SkillCategory,
+        score,
+        evidence.direct || evidence.transfer ? evidence.kind : "lab",
+        evidence.direct ? evidence.ref : evidence.transfer ? evidence.ref : "role intelligence requirement",
+        evidence.direct
+          ? "Mapped through local role intelligence seed"
+          : evidence.transfer
+            ? evidence.note
+            : "Required by local role intelligence seed; candidate proof missing",
+      );
+    })
+    .filter((skill): skill is SkillGraph["skills"][number] => Boolean(skill))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 9);
+
+  return skills;
+}
+
+function getRoleSkillEvidence(
+  input: BuilderInput,
+  roleSkill: RoleIntelligenceContext["required_skills"][number],
+): { direct: boolean; transfer: boolean; kind: "resume" | "project" | "github" | "lab"; ref: string; note: string } {
+  const resume = input.resume_text.toLowerCase();
+  const projectText = `${input.product_context} ${input.product_role} ${input.product_users} ${input.project_details.map((project) => `${project.url} ${project.value} ${project.role} ${project.users}`).join(" ")}`.toLowerCase();
+  const text = `${resume} ${projectText}`;
+  const terms = [roleSkill.name, ...(roleSkill.aliases ?? [])];
+  const direct = terms.some((term) => text.includes(term.toLowerCase()));
+  if (direct) {
+    return {
+      direct: true,
+      transfer: false,
+      kind: terms.some((term) => projectText.includes(term.toLowerCase())) ? "project" : "resume",
+      ref: "resume / supplied project evidence",
+      note: "Direct evidence found through local role intelligence seed",
+    };
+  }
+
+  const transfers: Array<[RegExp, RegExp, string]> = [
+    [/power\s*ha|hacmp|pacemaker|cluster|gpfs/, /resilien|cloud deployment|production api|observability|incident|rca/i, "HA/cluster operations are adjacent proof for resilient systems and production operations."],
+    [/incident|\brca\b|root cause|troubleshoot|health check/, /agentic|triage|observability|evaluation|drift|production api/i, "Incident/RCA work transfers to detection, triage, RCA, evaluation, and operational guardrails."],
+    [/uat|test cases|defect|issue tracker/, /testing|evaluation|quality|traceability|requirements/i, "UAT and defect lifecycle evidence transfers to validation and quality proof."],
+    [/requirement|brd|process flow|stakeholder|client/, /business|product|analysis|requirements|communication/i, "Requirements and stakeholder work are direct adjacent proof for BA/product analysis."],
+    [/azure|cloud|sap|hana|linux|suse|aix/, /cloud deployment|production api|cloud platform|linux administration/i, "Enterprise infrastructure experience transfers to cloud/platform operation context."],
+  ];
+  const transfer = transfers.find(([from, to]) => from.test(text) && to.test(roleSkill.name));
+
+  return {
+    direct: false,
+    transfer: Boolean(transfer),
+    kind: transfer ? "resume" : "lab",
+    ref: transfer ? "logical transfer from resume evidence" : "role intelligence requirement",
+    note: transfer?.[2] ?? "Candidate proof missing for this role requirement",
+  };
 }
 
 function buildResumeFirstSkills(
@@ -1158,12 +1245,36 @@ function buildBusinessAnalystBaselineRoadmap(): SkillGraph["roadmap_90d"] {
   ];
 }
 
+function buildRoleIntelligenceRoadmap(
+  targetRole: string,
+  roleIntelligence: RoleIntelligenceContext,
+): SkillGraph["roadmap_90d"] {
+  const skills = roleIntelligence.required_skills.slice(0, 6);
+  const templates = roleIntelligence.proof_templates;
+
+  return [
+    { week: 1, focus: "Role proof map", deliverable: `Map ${targetRole} requirements from local role seed to resume, project, GitHub, lab, or certificate evidence` },
+    { week: 2, focus: skills[0]?.name ?? "Core skill proof", deliverable: `Create proof for ${skills[0]?.name ?? "top role skill"} with ${skills[0]?.evidence.slice(0, 2).join(" or ") ?? "project/lab"} evidence` },
+    { week: 3, focus: skills[1]?.name ?? "Second skill proof", deliverable: `Create proof for ${skills[1]?.name ?? "second role skill"} and document acceptance criteria` },
+    { week: 4, focus: templates[0] ?? "Proof artifact", deliverable: `Publish or prepare ${templates[0] ?? "one role-specific proof artifact"} without private/client data` },
+    { week: 5, focus: skills[2]?.name ?? "Gap closure", deliverable: `Close visible gap for ${skills[2]?.name ?? "missing role skill"} with a small hands-on task` },
+    { week: 6, focus: "Validation lab", deliverable: "Complete one role-specific lab and capture outputs, decisions, and failure cases" },
+    { week: 7, focus: templates[1] ?? "Portfolio evidence", deliverable: `Add ${templates[1] ?? "supporting proof"} to portfolio with screenshots or notes` },
+    { week: 8, focus: "Logical transfer story", deliverable: "Write one story connecting adjacent experience to the target role without exaggeration" },
+    { week: 9, focus: "Evidence review", deliverable: "Remove unsupported claims and label pending proof clearly" },
+    { week: 10, focus: "Mock recruiter review", deliverable: "Review profile against must-have, strong, and good-to-have skills from local role seed" },
+    { week: 11, focus: "Interview story bank", deliverable: "Prepare role-specific stories tied to proof artifacts and gaps" },
+    { week: 12, focus: "Final proof profile", deliverable: "Publish/share updated proof profile and collect recruiter or mentor feedback" },
+  ];
+}
+
 function buildGaps(
   input: BuilderInput,
   target: string,
   hasGithub: boolean,
   hasProjects: boolean,
   evidenceSignals: EvidenceSignals,
+  roleIntelligence: RoleIntelligenceContext,
 ): SkillGraph["gaps"] {
   const targetMentionsCloud = /cloud|azure|aws|platform|architect|devops|sre/.test(target);
   const targetMentionsAi = /ai|ml|llm|agent|automation/.test(target);
@@ -1171,6 +1282,40 @@ function buildGaps(
   const isBusinessAnalyst = isBusinessAnalystResume(input.resume_text);
 
   if (input.analysis_mode === "target_gap") {
+    const missingMustHave = roleIntelligence.required_skills
+      .filter((roleSkill) => roleSkill.importance === "must_have")
+      .filter((roleSkill) => {
+        const evidence = getRoleSkillEvidence(input, roleSkill);
+        return !evidence.direct && !evidence.transfer;
+      })
+      .slice(0, 2);
+    const transferredSkills = roleIntelligence.required_skills
+      .filter((roleSkill) => {
+        const evidence = getRoleSkillEvidence(input, roleSkill);
+        return !evidence.direct && evidence.transfer;
+      })
+      .slice(0, 1);
+
+    if (missingMustHave.length > 0) {
+      return [
+        ...transferredSkills.map((roleSkill) => ({
+          skill: `${roleSkill.name} proof`,
+          severity: "medium" as const,
+          recommendation: `Adjacent evidence exists, but HireGEN needs concrete proof for ${roleSkill.name}: ${roleIntelligence.proof_templates.slice(0, 2).join(" or ")}.`,
+        })),
+        ...missingMustHave.map((roleSkill) => ({
+          skill: roleSkill.name,
+          severity: "high" as const,
+          recommendation: `Create proof for ${roleSkill.name} using ${roleSkill.evidence.slice(0, 3).join(", ")} evidence.`,
+        })),
+        {
+          skill: "Role proof packaging",
+          severity: "medium" as const,
+          recommendation: `Use local role seed proof templates: ${roleIntelligence.proof_templates.slice(0, 3).join(", ")}.`,
+        },
+      ].slice(0, 5);
+    }
+
     return [
       {
         skill: targetMentionsCloud ? "Target architecture proof" : "Target-role proof",
@@ -1226,12 +1371,17 @@ function buildRoadmap(
   input: BuilderInput,
   targetRole: string,
   skills: SkillGraph["skills"],
+  roleIntelligence: RoleIntelligenceContext,
 ): SkillGraph["roadmap_90d"] {
   const strongest = skills[0]?.name ?? "core skill";
   const isTargetGap = input.analysis_mode === "target_gap";
 
   if (input.analysis_mode === "baseline_profile" && isBusinessAnalystResume(input.resume_text)) {
     return buildBusinessAnalystBaselineRoadmap();
+  }
+
+  if (input.analysis_mode === "target_gap" && roleIntelligence.required_skills.length > 0) {
+    return buildRoleIntelligenceRoadmap(targetRole, roleIntelligence);
   }
 
   return [
