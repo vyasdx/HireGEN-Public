@@ -9,6 +9,7 @@ type StoredGeneration = {
   graph: SkillGraph;
   mode?: "openai" | "fallback";
   warning?: string;
+  input_analysis_mode?: "baseline_profile" | "target_gap";
 };
 
 export function GeneratedProfile() {
@@ -67,6 +68,7 @@ export function GeneratedProfile() {
     <ProfileReport
       candidate={generation.graph}
       modeLabel={generation.mode === "fallback" ? "Local fallback" : "OpenAI structured output"}
+      analysisMode={generation.input_analysis_mode}
     />
   );
 }
@@ -81,6 +83,7 @@ function parseStoredGeneration(raw: string): StoredGeneration | null {
       graph: parsedGraph.data,
       mode: data.mode,
       warning: data.warning,
+      input_analysis_mode: data.input_analysis_mode,
     };
   } catch {
     return null;

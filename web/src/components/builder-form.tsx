@@ -91,7 +91,10 @@ export function BuilderForm() {
       return;
     }
 
-    sessionStorage.setItem("hiregen:last-skill-graph", JSON.stringify(data));
+    sessionStorage.setItem("hiregen:last-skill-graph", JSON.stringify({
+      ...data,
+      input_analysis_mode: analysisMode,
+    }));
     router.push("/profile/generated");
   }
 

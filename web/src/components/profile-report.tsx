@@ -5,9 +5,13 @@ type ProfileReportProps = {
   candidate: SkillGraph;
   demo?: boolean;
   modeLabel?: string;
+  analysisMode?: "baseline_profile" | "target_gap";
 };
 
-export function ProfileReport({ candidate: c, demo = false, modeLabel }: ProfileReportProps) {
+export function ProfileReport({ candidate: c, demo = false, modeLabel, analysisMode }: ProfileReportProps) {
+  const isTargetGap = analysisMode === "target_gap";
+  const scoreBreakdown = isTargetGap ? buildTargetScoreBreakdown(c) : null;
+
   return (
     <main className="px-6 pt-12 pb-24 max-w-6xl mx-auto w-full">
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
@@ -23,7 +27,7 @@ export function ProfileReport({ candidate: c, demo = false, modeLabel }: Profile
         <div className="glass-soft p-4 text-center min-w-[160px]">
           <div className="text-xs text-ink-500 uppercase tracking-wider">Match score</div>
           <div className="display text-4xl gradient-text mt-1">{c.match_score}</div>
-          <div className="text-xs text-ink-500 mt-1">vs target role</div>
+          <div className="text-xs text-ink-500 mt-1">{isTargetGap ? "target-role fit" : "vs target role"}</div>
         </div>
       </div>
 
@@ -34,8 +38,65 @@ export function ProfileReport({ candidate: c, demo = false, modeLabel }: Profile
         </div>
       </section>
 
+      {scoreBreakdown && (
+        <section className="mb-8">
+          <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+            <div>
+              <h2 className="display text-2xl">Target fit breakdown</h2>
+              <p className="text-xs text-ink-500 mt-1">
+                This is separate from the current proof graph. It explains why the target-role score is {c.match_score} and where the next points can come from.
+              </p>
+            </div>
+            <span className="chip chip-amber">Goal: 90+ strong fit</span>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-3 mb-3">
+            <div className="glass p-4">
+              <div className="relative z-10">
+                <div className="text-xs text-ink-500 uppercase tracking-wider">Validated target fit</div>
+                <div className="display text-3xl text-brand-700 mt-1">{scoreBreakdown.current}</div>
+                <p className="text-xs text-ink-500 mt-2">Points already earned from resume, project, product, Git, or logical-transfer proof.</p>
+              </div>
+            </div>
+            <div className="glass p-4">
+              <div className="relative z-10">
+                <div className="text-xs text-ink-500 uppercase tracking-wider">Needed for 90+</div>
+                <div className="display text-3xl text-brand-700 mt-1">+{scoreBreakdown.toStrongFit}</div>
+                <p className="text-xs text-ink-500 mt-2">The practical lift required before HireGEN should call this a strong target-role match.</p>
+              </div>
+            </div>
+            <div className="glass p-4">
+              <div className="relative z-10">
+                <div className="text-xs text-ink-500 uppercase tracking-wider">Open headroom</div>
+                <div className="display text-3xl text-brand-700 mt-1">{scoreBreakdown.headroom}</div>
+                <p className="text-xs text-ink-500 mt-2">Remaining target-role points. Not all are needed for shortlist-ready fit.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-strong p-5">
+            <div className="relative z-10 space-y-3">
+              {scoreBreakdown.gapLifts.map((gap) => (
+                <div key={gap.skill} className="grid gap-3 md:grid-cols-[96px_1fr] items-start">
+                  <div className="chip chip-demo text-center">+{gap.points} pts</div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-sm">{gap.skill}</span>
+                      <span className={`chip !text-[10px] ${gap.severity === "high" ? "chip-demo" : gap.severity === "medium" ? "chip-amber" : ""}`}>
+                        {gap.severity}
+                      </span>
+                    </div>
+                    <p className="text-xs text-ink-500 mt-1">{gap.recommendation}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="mb-8">
-        <h2 className="display text-2xl mb-4">Skill graph</h2>
+        <h2 className="display text-2xl mb-4">{isTargetGap ? "Current evidence graph" : "Skill graph"}</h2>
         <div className="grid md:grid-cols-3 gap-3">
           {c.skills.map((s) => (
             <div key={s.name} className="glass p-4">
@@ -65,7 +126,7 @@ export function ProfileReport({ candidate: c, demo = false, modeLabel }: Profile
       </section>
 
       <section className="mb-8">
-        <h2 className="display text-2xl mb-4">Proof badges</h2>
+        <h2 className="display text-2xl mb-4">{isTargetGap ? "Current proof badges" : "Proof badges"}</h2>
         <div className="grid md:grid-cols-3 gap-3">
           {c.badges.map((b) => (
             <div key={b.id} className={`glass p-4 ${b.awarded ? "" : "opacity-50"}`}>
@@ -86,7 +147,7 @@ export function ProfileReport({ candidate: c, demo = false, modeLabel }: Profile
       </section>
 
       <section className="mb-8">
-        <h2 className="display text-2xl mb-4">Gaps</h2>
+        <h2 className="display text-2xl mb-4">{isTargetGap ? "Target gaps" : "Gaps"}</h2>
         <div className="space-y-2">
           {c.gaps.map((g) => (
             <div key={g.skill} className="glass-soft p-4 flex items-start gap-4">
@@ -120,4 +181,42 @@ export function ProfileReport({ candidate: c, demo = false, modeLabel }: Profile
       </section>
     </main>
   );
+}
+
+function buildTargetScoreBreakdown(candidate: SkillGraph) {
+  const current = candidate.match_score;
+  const target = 90;
+  const toStrongFit = Math.max(0, target - current);
+  const headroom = Math.max(0, 100 - current);
+  const severityWeight = {
+    high: 3,
+    medium: 2,
+    low: 1,
+  } as const;
+  const totalWeight = candidate.gaps.reduce((sum, gap) => sum + severityWeight[gap.severity], 0) || 1;
+  let assigned = 0;
+
+  const gapLifts = candidate.gaps.map((gap, index) => {
+    const isLast = index === candidate.gaps.length - 1;
+    const points = toStrongFit === 0
+      ? 0
+      : isLast
+        ? Math.max(0, toStrongFit - assigned)
+        : Math.max(1, Math.round((toStrongFit * severityWeight[gap.severity]) / totalWeight));
+    assigned += points;
+
+    return {
+      skill: gap.skill,
+      severity: gap.severity,
+      recommendation: gap.recommendation,
+      points,
+    };
+  });
+
+  return {
+    current,
+    toStrongFit,
+    headroom,
+    gapLifts,
+  };
 }
