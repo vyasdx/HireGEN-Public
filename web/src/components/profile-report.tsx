@@ -45,7 +45,7 @@ export function ProfileReport({ candidate: c, demo = false, modeLabel }: Profile
                   <span className="display text-2xl text-brand-700">{s.score}</span>
                 </div>
                 <div className="text-[10px] text-ink-500 uppercase tracking-wider mt-1">
-                  {s.category} · refreshed {s.freshness_days}d ago
+                  {s.category} · evidence age {s.freshness_days === 0 ? "current" : `${s.freshness_days}d`}
                 </div>
                 <div className="h-1.5 mt-3 rounded-full bg-white/60 overflow-hidden border border-white/60">
                   <div

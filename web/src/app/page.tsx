@@ -27,7 +27,7 @@ export default function Home() {
       <div className="px-3 mt-3">
         <div className="max-w-7xl mx-auto chip mx-auto text-center justify-center !text-xs">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
-          OpenAI × Outskill Hackathon build in progress · Day 3 of 5
+          OpenAI × Outskill Hackathon build in progress · Day 4 of 5
         </div>
       </div>
 

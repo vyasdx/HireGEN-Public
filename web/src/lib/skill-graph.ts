@@ -89,7 +89,7 @@ async function generateWithOpenAI(input: BuilderInput, evidenceSignals: Evidence
         {
           role: "system",
           content:
-            "You are HireGEN's skill validation engine. Build an honest candidate proof profile from the supplied resume, scanned GitHub signals, live product/project signals, product notes, and optional target role/job description. Resume is the primary source for experience, certifications, current role, enterprise skills, and domain expertise. GitHub, live product links, and private repo status are proof signals with different confidence levels: reachable live products can prove existence and product direction; private repos/screenshots are candidate-supplied until reviewed; public GitHub proves only what is visible. Do not penalize niche products for low popularity. Judge product value by problem clarity, user/workflow clarity, candidate role, live reachability, traction/status, architecture/demo evidence, and supporting proof. Do not invent employers, degrees, repos, links, certifications, users, revenue, ownership, or lab results. Mark uncertain claims as candidate-supplied or pending review. If live product links exist, do not reduce the profile to 'GitHub is weak'; instead explain the product proof packaging needed: architecture note, screenshots/demo, private repo review path, commit evidence, and role/impact notes. For baseline_profile mode, describe the candidate's current profile and default career path. For target_gap mode, compare against the target role/JD and create a senior transition roadmap that bridges existing domain experience into the target. For AIOps/AI systems roles, avoid generic beginner advice; focus on Python over ops data, time-series anomaly detection, RAG over runbooks/incidents, agentic RCA workflows, observability, evaluation, drift monitoring, cloud deployment, and human-in-loop guardrails.",
+            "You are HireGEN's skill validation engine. Build an honest candidate proof profile from the supplied resume, scanned GitHub signals, live product/project signals, product notes, and optional target role/job description. Resume is the primary source for experience, certifications, current role, enterprise skills, and domain expertise. GitHub, live product links, and private repo status are proof signals with different confidence levels: reachable live products can prove existence and product direction; private repos/screenshots are candidate-supplied until reviewed; public GitHub proves only what is visible. Do not penalize niche products for low popularity. Judge product value by problem clarity, user/workflow clarity, candidate role, live reachability, traction/status, architecture/demo evidence, and supporting proof. Do not invent employers, degrees, repos, links, certifications, users, revenue, ownership, or lab results. Mark uncertain claims as candidate-supplied or pending review. If no GitHub URL/source is supplied, do not mention GitHub as evidence. If live product links exist, do not reduce the profile to 'GitHub is weak'; instead explain the product proof packaging needed: architecture note, screenshots/demo, private repo review path, commit evidence, and role/impact notes. For baseline_profile mode, describe the candidate's current profile and default career path based only on the resume domain. For non-infrastructure profiles, never produce AIX/Linux/SAP/cloud troubleshooting roadmaps unless those skills are explicitly in the resume or target role. For healthcare/business analyst resumes, focus on requirements gathering, client/stakeholder management, process flows, UAT, defect tracking, QA coordination, domain workflows, production support, documentation, and measurable BA proof. For target_gap mode, compare against the target role/JD and create a transition roadmap that bridges existing domain experience into the target. For AIOps/AI systems roles, avoid generic beginner advice; focus on Python over ops data, time-series anomaly detection, RAG over runbooks/incidents, agentic RCA workflows, observability, evaluation, drift monitoring, cloud deployment, and human-in-loop guardrails.",
         },
         {
           role: "user",
@@ -155,6 +155,19 @@ function normalizeOpenAIOutput(raw: unknown, input: BuilderInput, evidenceSignal
   const graph = raw as Record<string, unknown>;
   if (typeof graph.id !== "string" || !graph.id.trim()) graph.id = "generated";
   if (typeof graph.github !== "string") graph.github = input.github_url;
+  if (typeof graph.education !== "string" || /not verified|unknown|n\/a/i.test(graph.education)) {
+    graph.education = inferEducation(input.resume_text);
+  }
+  if (typeof graph.education === "string" && graph.education.length > 120) {
+    graph.education = inferEducation(input.resume_text);
+  }
+  if (typeof graph.city !== "string" || !graph.city.trim()) {
+    graph.city = inferCity(input.resume_text);
+  }
+  if (typeof graph.city === "string" && graph.city.length > 80) graph.city = clip(graph.city, 80);
+  if (typeof graph.name === "string" && graph.name.length > 80) graph.name = clip(graph.name, 80);
+  if (typeof graph.target_role === "string" && graph.target_role.length > 120) graph.target_role = clip(graph.target_role, 120);
+  if (typeof graph.summary === "string" && graph.summary.length > 420) graph.summary = clip(graph.summary, 420);
 
   if (Array.isArray(graph.skills)) {
     graph.skills = graph.skills.map((skill) => {
@@ -197,6 +210,7 @@ function normalizeOpenAIOutput(raw: unknown, input: BuilderInput, evidenceSignal
     });
   }
 
+  sanitizeEvidenceLabels(graph, input);
   ensureEvidenceSignals(graph, input, evidenceSignals);
   ensureBaselineProfileQuality(graph, input, evidenceSignals);
   ensureTargetGapQuality(graph, input);
@@ -210,6 +224,26 @@ function normalizeOpenAIOutput(raw: unknown, input: BuilderInput, evidenceSignal
   }
 
   return graph;
+}
+
+function sanitizeEvidenceLabels(graph: Record<string, unknown>, input: BuilderInput): void {
+  const hasGithub = Boolean(input.github_url.trim() || input.github_urls.some((url) => url.trim()));
+  const skills = Array.isArray(graph.skills) ? graph.skills as Array<Record<string, unknown>> : [];
+
+  for (const skill of skills) {
+    if (!Array.isArray(skill.evidence)) continue;
+    skill.evidence = skill.evidence.map((evidence) => {
+      if (!evidence || typeof evidence !== "object") return evidence;
+      const nextEvidence = evidence as Record<string, unknown>;
+      const ref = String(nextEvidence.ref ?? "");
+      const note = String(nextEvidence.note ?? "");
+      if (!hasGithub && /github/i.test(`${ref} ${note}`)) {
+        nextEvidence.ref = ref.replace(/GitHub\/?/gi, "").replace(/candidate supplied\s*\/?\s*/i, "candidate supplied project/product link").trim() || "candidate supplied project/product link";
+        nextEvidence.note = note.replace(/GitHub\/?/gi, "project/product ").trim() || null;
+      }
+      return nextEvidence;
+    });
+  }
 }
 
 function ensureEvidenceSignals(graph: Record<string, unknown>, input: BuilderInput, evidenceSignals: EvidenceSignals): void {
@@ -317,7 +351,30 @@ function ensureEvidenceSignals(graph: Record<string, unknown>, input: BuilderInp
 }
 
 function ensureBaselineProfileQuality(graph: Record<string, unknown>, input: BuilderInput, evidenceSignals: EvidenceSignals): void {
-  if (input.analysis_mode !== "baseline_profile" || !isInfrastructureResume(input.resume_text)) return;
+  if (input.analysis_mode !== "baseline_profile") return;
+
+  if (isBusinessAnalystResume(input.resume_text)) {
+    const skills = Array.isArray(graph.skills) ? graph.skills as Array<Record<string, unknown>> : [];
+    const profileText = [
+      ...skills.map((skill) => String(skill.name ?? "")),
+      ...(Array.isArray(graph.gaps) ? (graph.gaps as Array<Record<string, unknown>>).map((gap) => String(gap.skill ?? "")) : []),
+      ...(Array.isArray(graph.roadmap_90d) ? (graph.roadmap_90d as Array<Record<string, unknown>>).map((item) => `${String(item.focus ?? "")} ${String(item.deliverable ?? "")}`) : []),
+    ].join(" ");
+    const hasDomainSkills = skills.some((skill) => /business analyst|requirements|uat|stakeholder|healthcare|hmis|defect|process/i.test(String(skill.name ?? "")));
+
+    if (!hasDomainSkills || hasInfrastructureDrift(profileText) || /major incident/i.test(profileText)) {
+      graph.skills = buildBusinessAnalystBaselineSkills(input, evidenceSignals);
+    }
+    graph.gaps = buildBusinessAnalystBaselineGaps(evidenceSignals);
+    graph.roadmap_90d = buildBusinessAnalystBaselineRoadmap();
+    graph.summary = clip(
+      `${input.name} has Business Analyst experience in healthcare/HMIS workflows, including requirement gathering, client requirement validation, process documentation, UAT/defect tracking, QA coordination, and production support. Product links are treated as separate candidate-supplied proof and should be packaged with role, workflow, and ownership evidence.`,
+      420,
+    );
+    return;
+  }
+
+  if (!isInfrastructureResume(input.resume_text)) return;
 
   graph.gaps = buildInfrastructureBaselineGaps(evidenceSignals);
 
@@ -524,6 +581,10 @@ function isInfrastructureResume(resumeText: string): boolean {
 
 function hasIrrelevantBaselineAdvice(text: string): boolean {
   return /ui\/ux|front[-\s]?end|frontend|react|typescript|community|networking|mentorship|follow trends/i.test(text);
+}
+
+function hasInfrastructureDrift(text: string): boolean {
+  return /aix|suse|linux|sap|hana|pacemaker|gpfs|power\s*ha|hacmp|cloud troubleshooting|infrastructure troubleshooting|cluster build/i.test(text);
 }
 
 function hasAny(text: string, patterns: RegExp[]): boolean {
@@ -796,7 +857,9 @@ function buildFallbackSkillGraph(input: BuilderInput, evidenceSignals: EvidenceS
   const liveProjects = evidenceSignals.projects.filter((project) => project.reachable);
   const hasProjects = liveProjects.length > 0;
   const productProofSkill = buildProductProofSkill(input, evidenceSignals);
-  const skills = buildResumeFirstSkills(resume, target, hasGithub, hasProjects, evidenceSignals);
+  const skills = isBusinessAnalystResume(input.resume_text)
+    ? buildBusinessAnalystBaselineSkills(input, evidenceSignals)
+    : buildResumeFirstSkills(resume, target, hasGithub, hasProjects, evidenceSignals);
   if (productProofSkill && !skills.some((skill) => skill.name === productProofSkill.name)) {
     skills.push(productProofSkill);
     skills.sort((a, b) => b.score - a.score);
@@ -879,7 +942,7 @@ function buildFallbackSkillGraph(input: BuilderInput, evidenceSignals: EvidenceS
     skills,
     badges: prioritizeBadges(badges).slice(0, 8),
     gaps: buildGaps(input, target, hasGithub, hasProjects, evidenceSignals),
-    roadmap_90d: buildRoadmap(input.analysis_mode, targetRole, skills),
+    roadmap_90d: buildRoadmap(input, targetRole, skills),
   });
 }
 
@@ -906,12 +969,20 @@ function buildResumeFirstSkills(
     { name: "VIOS / HMC / LPAR", category: "cloud", baseline: 78, patterns: [/vios/, /\bhmc\b/, /lpar/, /wpar/, /\bnim\b/, /power vc/] },
     { name: "Azure Cloud Infrastructure", category: "cloud", baseline: 76, patterns: [/azure/, /cloud migration/, /cloud infrastructure/] },
     { name: "SAP Infrastructure Migration", category: "domain", baseline: 74, patterns: [/sap/, /hana/, /migration support/] },
-    { name: "Major Incident & RCA", category: "soft_skill", baseline: 77, patterns: [/major incident/, /\brca\b/, /l4/, /l5/, /trouble ?shoot/] },
+    { name: "Major Incident & RCA", category: "soft_skill", baseline: 77, patterns: [/major incident/, /\brca\b/, /l4/, /l5/] },
     { name: "Technical Health Check", category: "soft_skill", baseline: 76, patterns: [/health check/, /technical health/, /infrastructure health/, /compliant and secure/] },
     { name: "Vulnerability Remediation", category: "testing", baseline: 72, patterns: [/vulnerability/, /non-compliance/, /security remediation/, /compliance/] },
     { name: "ITIL / Service Management", category: "soft_skill", baseline: 70, patterns: [/itil/, /service management/] },
     { name: "Datacenter Operations", category: "domain", baseline: 74, patterns: [/datacenter/, /data center/, /onsite/, /firmware/, /hardware integration/] },
     { name: "Leadership / Chapter Lead", category: "soft_skill", baseline: 72, patterns: [/chapter lead/, /guild/, /lead/, /meetings/, /squad/] },
+    { name: "Business Analysis", category: "domain", baseline: 76, patterns: [/business analyst/, /functional consultant/, /client requirement/, /requirement gathering/, /requirement management/] },
+    { name: "Healthcare / HMIS Domain", category: "domain", baseline: 74, patterns: [/health care/, /healthcare/, /\bhmis\b/, /hospital process/, /hospital/] },
+    { name: "Requirements Gathering", category: "soft_skill", baseline: 76, patterns: [/requirement gathering/, /requirement analysis/, /validate clients requirement/, /business requirements?/] },
+    { name: "Process Flow Documentation", category: "soft_skill", baseline: 72, patterns: [/process flows?/, /technical specifications?/, /document them/, /descriptive text/] },
+    { name: "UAT & Defect Tracking", category: "testing", baseline: 73, patterns: [/user acceptance test/, /\buat\b/, /defects?/, /issue tracker/, /test cases?/] },
+    { name: "Stakeholder Communication", category: "soft_skill", baseline: 72, patterns: [/communicate effectively/, /clients?/, /stakeholders?/, /development & testing team/, /knowledge transition/] },
+    { name: "Production Support", category: "soft_skill", baseline: 68, patterns: [/production support/, /applications in production/, /tracking production problems/, /troubleshooting/] },
+    { name: "Root Cause / Cause-Effect Analysis", category: "soft_skill", baseline: 66, patterns: [/cause-effect/, /fish bone/, /operational issues/] },
     { name: "React", category: "frontend", baseline: 64, patterns: [/react/], proofBoost: true },
     { name: "TypeScript", category: "frontend", baseline: 62, patterns: [/typescript/], proofBoost: true },
     { name: "Next.js", category: "frontend", baseline: 60, patterns: [/next\.?js/], proofBoost: true },
@@ -999,7 +1070,7 @@ function scoreSkill(
     evidence: [
       {
         kind: externalEvidence ? "project" : "resume",
-        ref: clip(evidenceRef ?? (externalEvidence ? "candidate supplied GitHub/project link" : "resume text"), 120),
+        ref: clip(evidenceRef ?? (externalEvidence ? "candidate supplied project/product link" : "resume text"), 120),
         note: mentioned ? "Mentioned directly in supplied resume text" : "Inferred from target role and adjacent evidence",
       },
     ],
@@ -1009,6 +1080,82 @@ function scoreSkill(
 function clip(value: string, maxLength: number): string {
   if (value.length <= maxLength) return value;
   return `${value.slice(0, Math.max(0, maxLength - 3))}...`;
+}
+
+function isBusinessAnalystResume(resumeText: string): boolean {
+  return /business analyst|functional consultant|requirement gathering|requirement management|client requirement|uat|user acceptance test|hmis|health ?care domain|hospital process|issue tracker/i.test(resumeText);
+}
+
+function buildBusinessAnalystBaselineSkills(input: BuilderInput, evidenceSignals: EvidenceSignals): SkillGraph["skills"] {
+  const resume = input.resume_text.toLowerCase();
+  const hasProjects = evidenceSignals.projects.some((project) => project.reachable);
+  const skills: SkillGraph["skills"] = [
+    targetSkill("Business Analysis", "domain", hasAny(resume, [/business analyst/, /functional consultant/]) ? 82 : 68, "resume", "Functional Consultant / BA", "Direct resume evidence"),
+    targetSkill("Healthcare / HMIS Domain", "domain", hasAny(resume, [/health care/, /healthcare/, /\bhmis\b/, /hospital/]) ? 80 : 60, "resume", "Healthcare/HMIS and hospital workflows", "Domain evidence from resume"),
+    targetSkill("Requirements Gathering", "soft_skill", hasAny(resume, [/requirement gathering/, /requirement management/, /client requirement/]) ? 80 : 62, "resume", "client requirement analysis and validation", "Direct resume evidence"),
+    targetSkill("Process Flow Documentation", "soft_skill", hasAny(resume, [/process flows?/, /technical specifications?/, /document/]) ? 74 : 58, "resume", "technical specifications and process flows", "Direct resume evidence"),
+    targetSkill("UAT & Defect Tracking", "testing", hasAny(resume, [/user acceptance test/, /\buat\b/, /defect/, /issue tracker/, /test cases/]) ? 76 : 58, "resume", "UAT cases, defect reporting, QA test case review", "Direct resume evidence"),
+    targetSkill("Stakeholder Communication", "soft_skill", hasAny(resume, [/client/, /stakeholder/, /development & testing team/, /knowledge transition/]) ? 74 : 58, "resume", "client, development, and QA coordination", "Direct resume evidence"),
+    targetSkill("Production Support", "soft_skill", hasAny(resume, [/production/, /troubleshooting/]) ? 68 : 52, "resume", "production problems and troubleshooting", "Resume evidence; depth needs proof"),
+  ];
+
+  const productProof = buildProductProofSkill(input, evidenceSignals);
+  if (productProof) skills.push(productProof);
+  if (hasProjects) {
+    skills.push(
+      targetSkill(
+        "Live Product Portfolio",
+        "domain",
+        74,
+        "project",
+        `${evidenceSignals.projects.filter((project) => project.reachable).length} reachable live project link(s)`,
+        "Reachability verified; product role/value remains candidate-supplied",
+      ),
+    );
+  }
+
+  return skills.sort((a, b) => b.score - a.score).slice(0, 10);
+}
+
+function buildBusinessAnalystBaselineGaps(evidenceSignals: EvidenceSignals): SkillGraph["gaps"] {
+  const hasProjects = evidenceSignals.projects.some((project) => project.reachable);
+
+  return [
+    {
+      skill: "BA proof packaging",
+      severity: "high",
+      recommendation: "Turn BA work into proof artifacts: sample BRD, process flow, requirement traceability matrix, UAT cases, and defect lifecycle notes.",
+    },
+    {
+      skill: hasProjects ? "Product proof connection" : "Portfolio proof",
+      severity: hasProjects ? "medium" : "high",
+      recommendation: hasProjects
+        ? "Connect each live product to BA evidence: problem statement, user workflow, acceptance criteria, screenshots, and candidate role."
+        : "Add a public-safe BA portfolio with anonymized workflows, specs, UAT samples, and before/after process improvements.",
+    },
+    {
+      skill: "Domain recency",
+      severity: "medium",
+      recommendation: "Refresh older healthcare/HMIS experience with a current case study, tool mapping, or modern product workflow example.",
+    },
+  ];
+}
+
+function buildBusinessAnalystBaselineRoadmap(): SkillGraph["roadmap_90d"] {
+  return [
+    { week: 1, focus: "BA evidence inventory", deliverable: "List projects by domain, stakeholders, requirements handled, UAT scope, and outcome" },
+    { week: 2, focus: "Anonymized BRD sample", deliverable: "Create one public-safe requirement document with scope, assumptions, and acceptance criteria" },
+    { week: 3, focus: "Process flow proof", deliverable: "Publish one current-state/future-state workflow diagram with business rules" },
+    { week: 4, focus: "Traceability matrix", deliverable: "Map requirements to user stories, test cases, defects, and sign-off evidence" },
+    { week: 5, focus: "UAT and defect story", deliverable: "Prepare one UAT plan, defect lifecycle example, and QA collaboration note" },
+    { week: 6, focus: "Healthcare domain refresh", deliverable: "Document one HMIS or hospital workflow case study with users and constraints" },
+    { week: 7, focus: "Product proof mapping", deliverable: "Connect live products to problem, user workflow, candidate role, and validation evidence" },
+    { week: 8, focus: "Stakeholder story bank", deliverable: "Prepare STAR stories for client clarification, requirement conflict, and production issue support" },
+    { week: 9, focus: "Modern BA tooling", deliverable: "Add Jira/Confluence/Figma/API/basic SQL exposure notes where genuinely known" },
+    { week: 10, focus: "Profile refresh", deliverable: "Rewrite resume and HireGEN profile around BA proof, not generic responsibilities" },
+    { week: 11, focus: "Mock recruiter review", deliverable: "Check every claim has resume, document, project, or interview-story evidence" },
+    { week: 12, focus: "Final BA proof profile", deliverable: "Publish/share proof profile and collect feedback from one BA/recruiter reviewer" },
+  ];
 }
 
 function buildGaps(
@@ -1021,6 +1168,7 @@ function buildGaps(
   const targetMentionsCloud = /cloud|azure|aws|platform|architect|devops|sre/.test(target);
   const targetMentionsAi = /ai|ml|llm|agent|automation/.test(target);
   const hasProductProof = Boolean(buildProductProofSkill(input, evidenceSignals));
+  const isBusinessAnalyst = isBusinessAnalystResume(input.resume_text);
 
   if (input.analysis_mode === "target_gap") {
     return [
@@ -1044,6 +1192,10 @@ function buildGaps(
           : "Complete a controlled role-specific lab to convert senior resume claims into verified proof.",
       },
     ];
+  }
+
+  if (isBusinessAnalyst) {
+    return buildBusinessAnalystBaselineGaps(evidenceSignals);
   }
 
   return [
@@ -1071,12 +1223,16 @@ function buildGaps(
 }
 
 function buildRoadmap(
-  analysisMode: BuilderInput["analysis_mode"],
+  input: BuilderInput,
   targetRole: string,
   skills: SkillGraph["skills"],
 ): SkillGraph["roadmap_90d"] {
   const strongest = skills[0]?.name ?? "core skill";
-  const isTargetGap = analysisMode === "target_gap";
+  const isTargetGap = input.analysis_mode === "target_gap";
+
+  if (input.analysis_mode === "baseline_profile" && isBusinessAnalystResume(input.resume_text)) {
+    return buildBusinessAnalystBaselineRoadmap();
+  }
 
   return [
     { week: 1, focus: "Evidence inventory", deliverable: "Group resume projects, certifications, GitHub, and role evidence into proof buckets" },
@@ -1100,7 +1256,8 @@ function inferCity(resumeText: string): string {
 }
 
 function inferEducation(resumeText: string): string {
-  const educationMatch = resumeText.match(/\b(B\.?Tech|M\.?Tech|BCA|MCA|BSc|MSc|MBA|PhD)[^,\n.]*/i);
+  const educationMatch =
+    resumeText.match(/\b(Master'?s?[^,\n.]{0,80}|Bachelor'?s?[^,\n.]{0,80}|B\.?Tech[^,\n.]*|M\.?Tech[^,\n.]*|BCA[^,\n.]*|MCA[^,\n.]*|BSc[^,\n.]*|MSc[^,\n.]*|MBA[^,\n.]*|PhD[^,\n.]*)/i);
   return educationMatch?.[0] ?? "Education not verified";
 }
 
